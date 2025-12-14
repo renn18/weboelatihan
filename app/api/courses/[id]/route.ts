@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 
 // Tipe untuk parameter rute dinamis (Next.js memberikannya di params)
@@ -8,11 +8,8 @@ interface Context {
 
 /**
  * 3. UPDATE (PUT/PATCH) - Memperbarui Kursus
- * @param request Objek Request
- * @param context Mengandung { params: { id: string } }
- * @returns Response JSON
  */
-export async function PUT(request: Request, context: Context) {
+export async function PUT(request: NextRequest, context: Context) {
   const courseId = context.params.id;
 
   try {
@@ -41,11 +38,8 @@ export async function PUT(request: Request, context: Context) {
 
 /**
  * 4. DELETE (DELETE) - Menghapus Kursus
- * @param request Objek Request
- * @param context Mengandung { params: { id: string } }
- * @returns Response Kosong atau Status 204
  */
-export async function DELETE(request: Request, context: Context) {
+export async function DELETE(request: NextRequest, context: Context) {
   const courseId = context.params.id;
 
   try {
