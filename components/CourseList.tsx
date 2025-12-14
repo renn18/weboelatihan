@@ -1,6 +1,5 @@
 import prisma from '@/lib/prisma';
-import { Course } from '@prisma/client'; // Impor tipe dari Prisma Client
-import React from 'react';
+import { Course } from '@/app/generated/prisma/client';
 
 // 1. Fungsi Server untuk Mengambil Data
 async function getCourses(): Promise<Course[]> {
@@ -43,8 +42,8 @@ export default async function CourseList() {
 
                     <div className="px-5 py-4 border-t bg-gray-50 flex justify-between items-center">
                         <span className={`px-3 py-1 text-xs font-semibold rounded-full ${course.isPublished
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-yellow-100 text-yellow-800'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
                             }`}>
                             {course.isPublished ? 'Terbit' : 'Draf'}
                         </span>
