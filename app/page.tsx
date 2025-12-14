@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma"; // Sesuaikan path
+import { Course } from "./generated/prisma/client";
 
 // Karena ini adalah Server Component, kita bisa menggunakan async/await
 async function getPublishedCourses() {
@@ -26,7 +27,7 @@ export default async function HomePage() {
         <p>Belum ada kursus yang diterbitkan.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {courses.map((course) => (
+          {courses.map((course: Course) => (
             <div key={course.id} className="border p-4 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold">{course.title}</h2>
               <p className="text-gray-600 mt-2">{course.description}</p>
