@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'; // <-- Import NextReque
 import prisma from '@/lib/prisma'; 
 
 // DEFINISIKAN ULANG CONTEXT
-// Next.js App Router secara sinkron menyediakan params di context.
+// Next.js App Router menyediakan params sebagai Promise
 interface Context {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 /**
@@ -12,7 +12,7 @@ interface Context {
  * Gunakan NextRequest dan tipe Context yang sudah diperbaiki
  */
 export async function PUT(request: NextRequest, context: Context) {
-  const courseId = context.params.id; // Akses ID secara sinkron
+  const { id: courseId } = await context.params; // Await params Promise
 
   try {
     const body = await request.json();
@@ -41,7 +41,7 @@ export async function PUT(request: NextRequest, context: Context) {
  * Gunakan NextRequest dan tipe Context yang sudah diperbaiki
  */
 export async function DELETE(request: NextRequest, context: Context) {
-  const courseId = context.params.id;
+  const { id: courseId } = await context.params;
 
   try {
     await prisma.course.delete({
