@@ -1,20 +1,21 @@
-import { NextResponse, NextRequest } from 'next/server';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'; // <-- Import NextRequest
+import prisma from '@/lib/prisma'; 
 
-// Tipe untuk parameter rute dinamis (Next.js memberikannya di params)
+// DEFINISIKAN ULANG CONTEXT
+// Next.js App Router secara sinkron menyediakan params di context.
 interface Context {
   params: { id: string };
 }
 
 /**
  * 3. UPDATE (PUT/PATCH) - Memperbarui Kursus
+ * Gunakan NextRequest dan tipe Context yang sudah diperbaiki
  */
 export async function PUT(request: NextRequest, context: Context) {
-  const courseId = context.params.id;
+  const courseId = context.params.id; // Akses ID secara sinkron
 
   try {
     const body = await request.json();
-    // Kita hanya mengizinkan perubahan pada title, description, price, dan isPublished
     const { title, description, price, isPublished } = body;
 
     const updatedCourse = await prisma.course.update({
@@ -22,9 +23,8 @@ export async function PUT(request: NextRequest, context: Context) {
       data: {
         title,
         description,
-        price: price !== undefined ? price : undefined, // Hanya update jika ada
+        price: price !== undefined ? price : undefined,
         isPublished: isPublished !== undefined ? isPublished : undefined,
-        // Slug bisa dihitung ulang jika title berubah
       },
     });
 
@@ -38,6 +38,7 @@ export async function PUT(request: NextRequest, context: Context) {
 
 /**
  * 4. DELETE (DELETE) - Menghapus Kursus
+ * Gunakan NextRequest dan tipe Context yang sudah diperbaiki
  */
 export async function DELETE(request: NextRequest, context: Context) {
   const courseId = context.params.id;
@@ -47,7 +48,6 @@ export async function DELETE(request: NextRequest, context: Context) {
       where: { id: courseId },
     });
 
-    // 204 No Content adalah status standar untuk operasi DELETE yang sukses
     return new NextResponse(null, { status: 204 }); 
 
   } catch (error) {
@@ -55,3 +55,9 @@ export async function DELETE(request: NextRequest, context: Context) {
     return NextResponse.json({ message: "Gagal menghapus kursus." }, { status: 500 });
   }
 }
+
+// (Jika Anda juga memiliki GET untuk detail kursus di sini, tambahkan)
+// export async function GET(request: NextRequest, context: Context) {
+//   const courseId = context.params.id;
+//   // ... logika read single course
+// }
