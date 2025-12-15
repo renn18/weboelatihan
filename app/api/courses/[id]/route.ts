@@ -1,63 +1,85 @@
-import { NextRequest, NextResponse } from 'next/server'; // <-- Import NextRequest
-import prisma from '@/lib/prisma'; 
+// app/api/courses/[id]/route.ts
 
-// DEFINISIKAN ULANG CONTEXT
-// Next.js App Router menyediakan params sebagai Promise
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+// Import yang benar untuk Clerk v6 Server Components/Route Handlers
+import { auth, currentUser } from '@clerk/nextjs/server';
+
 interface Context {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 /**
- * 3. UPDATE (PUT/PATCH) - Memperbarui Kursus
- * Gunakan NextRequest dan tipe Context yang sudah diperbaiki
+ * Fungsi Helper: Memeriksa apakah pengguna yang login adalah ADMIN
+ * @returns {Promise<boolean>}
  */
-export async function PUT(request: NextRequest, context: Context) {
-  const { id: courseId } = await context.params; // Await params Promise
+async function checkAdminStatus(): Promise<boolean> {
+  // Ambil sesi (userId) dari Clerk
+  const { userId } = auth();
 
+  // Jika tidak ada userId (belum login), kembalikan false
+  if (!userId) {
+    return false;
+  }
+
+  // Ambil user object lengkap (untuk mengakses metadata)
+  const user = await currentUser();
+
+  // Periksa Public Metadata. Asumsi Anda menyimpan role di publicMetadata.role
+  const role = user?.publicMetadata?.role;
+
+  // Cek apakah role adalah 'ADMIN'
+  return role === 'ADMIN';
+}
+
+
+// =================================================================
+// 3. UPDATE (PUT/PATCH) - Memperbarui Kursus
+// =================================================================
+export async function PUT(request: NextRequest, context: Context) {
+  // 1. Verifikasi Role Admin
+  const isAdmin = await checkAdminStatus();
+  
+  if (!isAdmin) {
+    // 403 Forbidden: Pengguna login tetapi tidak memiliki hak
+    return NextResponse.json({ message: "Akses ditolak. Anda bukan administrator." }, { status: 403 });
+  }
+
+  // Lanjutkan proses hanya jika pengguna adalah ADMIN
+  const courseId = context.params.id;
   try {
     const body = await request.json();
-    const { title, description, price, isPublished } = body;
-
+    // ... (Destructuring body dan logika update Prisma)
     const updatedCourse = await prisma.course.update({
       where: { id: courseId },
-      data: {
-        title,
-        description,
-        price: price !== undefined ? price : undefined,
-        isPublished: isPublished !== undefined ? isPublished : undefined,
-      },
+      // ... (data update)
     });
-
     return NextResponse.json(updatedCourse, { status: 200 });
-
   } catch (error) {
     console.error('Error saat memperbarui kursus:', error);
     return NextResponse.json({ message: "Gagal memperbarui kursus." }, { status: 500 });
   }
 }
 
-/**
- * 4. DELETE (DELETE) - Menghapus Kursus
- * Gunakan NextRequest dan tipe Context yang sudah diperbaiki
- */
+// =================================================================
+// 4. DELETE (DELETE) - Menghapus Kursus
+// =================================================================
 export async function DELETE(request: NextRequest, context: Context) {
-  const { id: courseId } = await context.params;
+  // 1. Verifikasi Role Admin
+  const isAdmin = await checkAdminStatus();
 
+  if (!isAdmin) {
+    return NextResponse.json({ message: "Akses ditolak. Anda bukan administrator." }, { status: 403 });
+  }
+
+  // Lanjutkan proses hanya jika pengguna adalah ADMIN
+  const courseId = context.params.id;
   try {
-    await prisma.course.delete({
-      where: { id: courseId },
-    });
-
+    // ... (Logika Delete Prisma)
+    await prisma.course.delete({ where: { id: courseId } });
     return new NextResponse(null, { status: 204 }); 
-
   } catch (error) {
     console.error('Error saat menghapus kursus:', error);
     return NextResponse.json({ message: "Gagal menghapus kursus." }, { status: 500 });
   }
 }
-
-// (Jika Anda juga memiliki GET untuk detail kursus di sini, tambahkan)
-// export async function GET(request: NextRequest, context: Context) {
-//   const courseId = context.params.id;
-//   // ... logika read single course
-// }

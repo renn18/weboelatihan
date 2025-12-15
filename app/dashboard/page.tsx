@@ -1,36 +1,21 @@
-import CourseForm from '@/components/CourseForm'; // Import form yang sudah dibuat
-import CourseList from '@/components/CourseList';
-import { auth } from '@/lib/auth';
+// app/dashboard/page.tsx
+
+import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
+import CourseForm from '@/components/CourseForm';
+import CourseList from '@/components/CourseList';
 
-// Ini adalah Server Component (default di App Router)
 export default async function DashboardPage() {
-    const session = await auth();
-
-    if (!session) {
-        redirect('/login');
+    if ((await auth()).sessionClaims?.metadata.onboardingComplete === true) {
+        redirect('/')
     }
-
-    // 3. (Opsional) Cek role jika Anda ingin hanya admin yang bisa mengakses
-    // if (session.user?.role !== "ADMIN") { ... }
-
     return (
         <div className="p-8 space-y-12">
-            <h1 className="text-4xl font-extrabold mb-8 text-center">Dashboard Admin</h1>
-
-            {/* Komponen formulir Client Side */}
+            <h1 className="text-4xl font-extrabold text-center text-gray-800">Dashboard Admin Pelatihan</h1>
             <CourseForm />
-
             <hr className="border-gray-300" />
+            <CourseList />
 
-            {/* 2. Komponen Server untuk Menampilkan Data (Langsung dari DB) */}
-            <section>
-                <h2 className="text-3xl font-bold mb-6 text-gray-800">Daftar Kursus Saat Ini</h2>
-
-                {/* CourseList adalah Server Component yang mengambil data */}
-                <CourseList />
-
-            </section>
         </div>
     );
 }

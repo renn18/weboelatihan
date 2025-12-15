@@ -1,15 +1,26 @@
-import { PrismaClient } from "@prisma/client";
+// lib/prisma.ts
 
-const prismaClientSingleton = () => {
-  return new PrismaClient();
-};
+import { PrismaClient } from '@/app/generated/prisma';
 
+// Tambahkan deklarasi ini ke Global Object
 declare global {
-  var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
+  // eslint-disable-next-line no-var
+  var prisma: PrismaClient | undefined; 
 }
 
-const prisma = globalThis.prisma ?? prismaClientSingleton();
+let prisma: PrismaClient;
+
+if (process.env.NODE_ENV === 'production') {
+  prisma = new PrismaClient();
+} else {
+  // Pastikan global.prisma terinisialisasi HANYA SEKALI
+  if (!global.prisma) {
+    global.prisma = new PrismaClient({
+        // Opsional: Anda dapat menghapus log jika tidak diperlukan
+        // log: ['query', 'error', 'warn'], 
+    });
+  }
+  prisma = global.prisma;
+}
 
 export default prisma;
-
-if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma;
