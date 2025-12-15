@@ -6,7 +6,7 @@ import prisma from '@/lib/prisma';
 import { auth, currentUser } from '@clerk/nextjs/server';
 
 async function checkAdminStatus(): Promise<boolean> {
-  const { userId } = auth()
+  const { userId } = await auth()
   if (!userId) return false
 
   const user = await currentUser()
