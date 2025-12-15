@@ -5,28 +5,14 @@ import prisma from '@/lib/prisma';
 // Import yang benar untuk Clerk v6 Server Components/Route Handlers
 import { auth, currentUser } from '@clerk/nextjs/server';
 
-/**
- * Fungsi Helper: Memeriksa apakah pengguna yang login adalah ADMIN
- * @returns {Promise<boolean>}
- */
 async function checkAdminStatus(): Promise<boolean> {
-  // Ambil sesi (userId) dari Clerk
-  const { userId } = auth();
+  const { userId } = auth()
+  if (!userId) return false
 
-  // Jika tidak ada userId (belum login), kembalikan false
-  if (!userId) {
-    return false;
-  }
-
-  // Ambil user object lengkap (untuk mengakses metadata)
-  const user = await currentUser();
-
-  // Periksa Public Metadata. Asumsi Anda menyimpan role di publicMetadata.role
-  const role = user?.publicMetadata?.role;
-
-  // Cek apakah role adalah 'ADMIN'
-  return role === 'ADMIN';
+  const user = await currentUser()
+  return user?.publicMetadata?.role === 'ADMIN'
 }
+
 
 
 // =================================================================
@@ -34,34 +20,33 @@ async function checkAdminStatus(): Promise<boolean> {
 // =================================================================
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const isAdmin = await checkAdminStatus();
-
+  const isAdmin = await checkAdminStatus()
   if (!isAdmin) {
     return NextResponse.json(
-      { message: "Akses ditolak. Anda bukan administrator." },
+      { message: 'Akses ditolak. Anda bukan administrator.' },
       { status: 403 }
-    );
+    )
   }
 
-  const courseId = params.id;
+  const { id } = await params
 
   try {
-    const body = await request.json();
+    const body = await request.json()
 
     const updatedCourse = await prisma.course.update({
-      where: { id: courseId },
+      where: { id },
       data: body,
-    });
+    })
 
-    return NextResponse.json(updatedCourse);
+    return NextResponse.json(updatedCourse)
   } catch (error) {
-    console.error('Error saat memperbarui kursus:', error);
+    console.error(error)
     return NextResponse.json(
-      { message: "Gagal memperbarui kursus." },
+      { message: 'Gagal memperbarui kursus.' },
       { status: 500 }
-    );
+    )
   }
 }
 
@@ -71,28 +56,26 @@ export async function PUT(
 // =================================================================
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const isAdmin = await checkAdminStatus();
-
+  const isAdmin = await checkAdminStatus()
   if (!isAdmin) {
     return NextResponse.json(
-      { message: "Akses ditolak. Anda bukan administrator." },
+      { message: 'Akses ditolak. Anda bukan administrator.' },
       { status: 403 }
-    );
+    )
   }
 
-  try {
-    await prisma.course.delete({
-      where: { id: params.id },
-    });
+  const { id } = await params
 
-    return new NextResponse(null, { status: 204 });
+  try {
+    await prisma.course.delete({ where: { id } })
+    return new NextResponse(null, { status: 204 })
   } catch (error) {
-    console.error('Error saat menghapus kursus:', error);
+    console.error(error)
     return NextResponse.json(
-      { message: "Gagal menghapus kursus." },
+      { message: 'Gagal menghapus kursus.' },
       { status: 500 }
-    );
+    )
   }
 }
