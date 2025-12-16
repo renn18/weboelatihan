@@ -8,7 +8,6 @@ async function getCourses(): Promise<Course[]> {
         orderBy: {
             createdAt: 'desc' // Urutkan dari yang terbaru
         },
-        // Anda bisa menambahkan 'select' jika hanya butuh kolom tertentu
     });
     return courses;
 }
