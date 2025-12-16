@@ -1,6 +1,6 @@
 // lib/prisma.ts
 
-import { PrismaClient } from '@/app/generated/prisma';
+import { PrismaClient } from '../app/generated/prisma';
 
 // Tambahkan deklarasi ini ke Global Object
 declare global {
