@@ -1,7 +1,8 @@
 // app/api/courses/[id]/route.ts
 
+
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 // Import yang benar untuk Clerk v6 Server Components/Route Handlers
 import { auth, currentUser } from '@clerk/nextjs/server';
 

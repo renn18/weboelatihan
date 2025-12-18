@@ -1,5 +1,6 @@
+
 import { NextResponse } from 'next/server';
-import prisma from '../../../lib/prisma'; 
+import { prisma } from '../../../lib/prisma'; 
 import { revalidatePath } from 'next/cache';// Import Prisma Client yang sudah kita buat
 
 // Helper untuk memastikan data JSON yang masuk valid
