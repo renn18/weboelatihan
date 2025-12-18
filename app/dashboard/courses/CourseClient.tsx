@@ -43,21 +43,21 @@ export default function CoursesClient({
 
             <div className="grid md:grid-cols-3 gap-4">
                 {courses.map(course => (
-                    <Link href={`/dashboard/courses/${course.slug}`} key={course.id}>
-                        <Card key={course.id}>
+                    <Card key={course.id}>
 
-                            <CardContent className="p-4 space-y-2">
-                                <h3 className="font-semibold">{course.title}</h3>
+                        <CardContent className="p-4 space-y-2">
+                            <Link href={`/dashboard/courses/${course.slug}`} key={course.id}>
+                                <h3 className="font-semibold mb-3">{course.title}</h3>
+                            </Link>
 
-                                <div className="flex gap-2">
-                                    <CourseModal course={course} />
-                                    <DeleteConfirm id={course.id} />
-                                </div>
+                            <div className="flex gap-2">
+                                <CourseModal course={course} />
+                                <DeleteConfirm id={course.id} />
+                            </div>
 
-                                <ThumbnailUpload id={course.id} />
-                            </CardContent>
-                        </Card>
-                    </Link>
+                            <ThumbnailUpload id={course.id} currentThumbnail={course.thumbnail} />
+                        </CardContent>
+                    </Card>
                 ))}
             </div>
             {filteredCourses.length === 0 && (

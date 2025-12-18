@@ -94,11 +94,60 @@ export async function updateThumbnail(formData: FormData) {
 
   const imageUrl = `/uploads/${filename}`
 
+  const existing = await prisma.course.findUnique({
+  where: { id },
+  select: { thumbnail: true },
+})
+
+if (existing?.thumbnail) {
+  const oldPath = path.join(
+    process.cwd(),
+    'public',
+    existing.thumbnail
+  )
+
+  if (fs.existsSync(oldPath)) {
+    fs.unlinkSync(oldPath)
+  }
+}
+
   await prisma.course.update({
     where: { id },
     data: {
       thumbnail: imageUrl,
     },
+  })
+
+  revalidatePath('/dashboard/courses')
+}
+
+export async function deleteThumbnail(courseId: string) {
+  const { userId } = await auth()
+  if (!userId) throw new Error('Unauthorized')
+
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: { thumbnail: true },
+  })
+
+  if (!course || !course.thumbnail) {
+    return
+  }
+
+  // contoh: /uploads/123-image.png
+  const filePath = path.join(
+    process.cwd(),
+    'public',
+    course.thumbnail
+  )
+
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath)
+  }
+
+  await prisma.course.update({
+    where: { id: courseId },
+    data: { thumbnail: null },
   })
 
   revalidatePath('/dashboard/courses')
