@@ -7,7 +7,6 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../app/generated/prisma"
-  runtime  = "vercel-edge"
 }
 
 datasource db {
@@ -28,6 +27,7 @@ model Course {
   title       String   @unique
   slug        String   @unique // URL yang ramah SEO
   description String?
+  thumbnail   String?  @default("https://via.placeholder.com/150")
   price       Int      @default(0)
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())

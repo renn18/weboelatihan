@@ -1,11 +1,11 @@
-
+import { prisma } from '@/lib/prisma'
 import CourseForm from '@/components/CourseForm'
 import CourseList from '@/components/CourseList'
 import { Card, CardContent } from '@/components/ui/card'
 import { BookOpen, Users, GraduationCap } from 'lucide-react'
 
 export default async function DashboardClient() {
-    const user = await prisma?.user.findFirst({
+    const users = await prisma.user.findFirst({
         select: {
             name: true,
             role: true,
@@ -18,9 +18,9 @@ export default async function DashboardClient() {
             <div className=" p-6 space-y-8">
                 {/* Header */}
                 <div className="text-center space-y-2">
-                    <h1 className="text-3xl font-bold">Selamat Datang, {user?.name}</h1>
+                    <h1 className="text-3xl font-bold">Selamat Datang, {users?.name}</h1>
                     <p className="text-muted-foreground">
-                        Login sebagai {user?.role === 'ADMIN' ? 'Admin' : 'Peserta'}
+                        Login sebagai {users?.role === 'ADMIN' ? 'Admin' : 'Peserta'}
                     </p>
                 </div>
 

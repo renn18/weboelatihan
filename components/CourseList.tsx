@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { Course } from '@/app/generated/prisma/client';
 
 // 1. Fungsi Server untuk Mengambil Data

@@ -1,25 +1,10 @@
-// lib/prisma.ts
+import "dotenv/config";
+import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaClient } from '../app/generated/prisma'
 
-import { PrismaClient } from '../app/generated/prisma';
+const connectionString = `${process.env.DATABASE_URL}`
 
-// Tambahkan deklarasi ini ke Global Object
-declare global {
-  var prisma: PrismaClient | undefined; 
-}
+const adapter = new PrismaPg({ connectionString })
+const prisma = new PrismaClient({ adapter })
 
-let prisma: PrismaClient;
-
-if (process.env.NODE_ENV === 'production') {
-  prisma = new PrismaClient();
-} else {
-  // Pastikan global.prisma terinisialisasi HANYA SEKALI
-  if (!global.prisma) {
-    global.prisma = new PrismaClient({
-        // Opsional: Anda dapat menghapus log jika tidak diperlukan
-        // log: ['query', 'error', 'warn'], 
-    });
-  }
-  prisma = global.prisma;
-}
-
-export default prisma;
+export { prisma }

@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma"; // Sesuaikan path
+import { prisma } from "@/lib/prisma"; // Sesuaikan path
 import { Course } from "./generated/prisma/client";
 
 // Karena ini adalah Server Component, kita bisa menggunakan async/await
