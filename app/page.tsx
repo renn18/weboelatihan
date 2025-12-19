@@ -5,7 +5,7 @@ import { Course } from "./generated/prisma/client";
 async function getPublishedCourses() {
   const courses = await prisma.course.findMany({
     where: {
-      isPublished: true,
+      isPublished: false,
     },
     // Urutkan berdasarkan tanggal dibuat terbaru
     orderBy: {

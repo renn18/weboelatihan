@@ -12,9 +12,9 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   const { isAuthenticated, sessionClaims, redirectToSignIn } = await auth()
 
  // belum login → login dulu
-  if (!isAuthenticated && !isPublicRoute(req)) {
-    return redirectToSignIn({ returnBackUrl: req.url })
-  }
+  // if (!isAuthenticated && !isPublicRoute(req)) {
+  //   return redirectToSignIn({ returnBackUrl: req.url })
+  // }
 
   // sudah login tapi belum onboarding → paksa ke /onboarding
   if (
