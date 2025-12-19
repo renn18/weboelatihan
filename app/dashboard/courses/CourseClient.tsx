@@ -1,6 +1,6 @@
 'use client'
 
-import type { Course } from '@/app/generated/prisma/browser'
+import type { Course } from '@/app/generated/prisma'
 import CourseModal from './CourseModal'
 import DeleteConfirm from './DeleteConfirm'
 import ThumbnailUpload from './ThumbnailUpload'
