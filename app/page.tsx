@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma"; // Sesuaikan path
 import { Course } from "./generated/prisma/client";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 // Karena ini adalah Server Component, kita bisa menggunakan async/await
 async function getPublishedCourses() {
@@ -36,6 +38,11 @@ export default async function HomePage() {
           ))}
         </div>
       )}
+      <Link href="/dashboard/courses">
+        <Button variant="link" className="mt-6">
+          Dashboard
+        </Button>
+      </Link>
     </main>
   );
 }
