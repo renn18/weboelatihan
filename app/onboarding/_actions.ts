@@ -1,26 +1,44 @@
 'use server'
 
 import { auth, clerkClient } from '@clerk/nextjs/server'
+import {prisma} from '@/lib/prisma'
 
-export const completeOnboarding = async (formData: FormData) => {
-  const { isAuthenticated, userId } = await auth()
+export async function completeOnboarding(formData: FormData) {
+  const { userId } = await auth()
+  if (!userId) return { error: 'Not authenticated' }
 
-  if (!isAuthenticated) {
-    return { message: 'No Logged In User' }
+  const applicationName = formData.get('applicationName') as string
+  const applicationType = formData.get('applicationType') as string
+
+  if (!applicationName || !applicationType) {
+    return { error: 'Data tidak lengkap' }
   }
 
-  const client = await clerkClient()
-
   try {
-    const res = await client.users.updateUser(userId, {
+    const client = await clerkClient()
+    client.users.updateUser(userId, {
       publicMetadata: {
         onboardingComplete: true,
-        applicationName: formData.get('applicationName'),
-        applicationType: formData.get('applicationType'),
+        applicationName,
+        applicationType,
       },
     })
-    return { message: res.publicMetadata }
+
+//  console.log('PRISMA INSTANCE:', prisma)
+    const userDb = await prisma.user.upsert({
+      where: { clerkId: userId },
+      create: {
+        clerkId: userId,
+        role: 'user',
+      },
+      update: {},
+    })
+
+    console.log('USER DB SAVED:', userDb)
+
+    return { success: true }
   } catch (err) {
-    return { error: 'There was an error updating the user metadata.' }
+    console.error('ONBOARDING ERROR:', err)
+    return { error: 'Gagal onboarding' }
   }
 }
