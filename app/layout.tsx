@@ -4,8 +4,6 @@ import "./globals.css"
 
 import { ClerkProvider } from "@clerk/nextjs"
 import { ThemeProvider } from "@/components/theme-provider"
-import { NavbarActions } from "@/components/navbar-actions"
-import Header from "@/components/Header"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +43,6 @@ export default function RootLayout({
               <NavbarActions />
             </nav> */}
             <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans selection:bg-blue-100 dark:selection:bg-blue-900/30 transition-colors duration-300">
-              <Header />
 
               {children}
             </div>

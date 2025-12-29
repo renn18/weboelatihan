@@ -19,6 +19,13 @@ export default function CourseForm() {
                 className="w-full border rounded p-2"
             />
 
+            <textarea
+                name="category"
+                placeholder="Kategori"
+                required
+                className="w-full border rounded p-2"
+            />
+
             <input
                 name="price"
                 type="number"

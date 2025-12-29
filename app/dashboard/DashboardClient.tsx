@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma'
-import CourseForm from '@/components/CourseForm'
 import CourseList from '@/components/CourseList'
 import { Card, CardContent } from '@/components/ui/card'
 import { BookOpen, Users, GraduationCap } from 'lucide-react'
@@ -14,13 +13,12 @@ export default async function DashboardClient() {
 
     return (
         <div className='w-full'>
-
             <div className=" p-6 space-y-8">
                 {/* Header */}
                 <div className="text-center space-y-2">
                     <h1 className="text-3xl font-bold">Selamat Datang, {users?.name}</h1>
                     <p className="text-muted-foreground">
-                        Login sebagai {users?.role === 'ADMIN' ? 'Admin' : 'Peserta'}
+                        Login sebagai {users?.role === 'admin' ? 'Admin' : 'Peserta'}
                     </p>
                 </div>
 
@@ -42,14 +40,6 @@ export default async function DashboardClient() {
                         </Card>
                     ))}
                 </div>
-
-                {/* Form */}
-                {/* <Card className="rounded-2xl">
-                <CardContent className="p-6 space-y-4">
-                    <h2 className="text-xl font-semibold">Tambah Kelas Baru</h2>
-                    <CourseForm />
-                </CardContent>
-            </Card> */}
 
                 {/* List */}
                 <Card className="rounded-2xl">

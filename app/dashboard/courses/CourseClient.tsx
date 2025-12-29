@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
+import CoursePublishSwitch from './CoursePublishSwitch'
 
 export default function CoursesClient({
     courses,
@@ -56,6 +57,7 @@ export default function CoursesClient({
                             </div>
 
                             <ThumbnailUpload id={course.id} currentThumbnail={course.thumbnail} />
+                            <CoursePublishSwitch courseId={course.id} published={course.isPublished} />
                         </CardContent>
                     </Card>
                 ))}

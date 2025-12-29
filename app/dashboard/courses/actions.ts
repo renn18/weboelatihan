@@ -14,12 +14,19 @@ function slugify(text: string) {
 }
 
 export async function createCourse(formData: FormData) {
-  const { userId } = await auth()
-  if (!userId) throw new Error('Unauthorized')
+  const { userId: clerkUserId } = await auth()
+  if (!clerkUserId) throw new Error('Unauthorized')
+
+  const dbUser = await prisma.user.findUnique({
+    where: { clerkId: clerkUserId },
+  })
+
+  if (!dbUser) throw new Error('User not found')
 
   const title = formData.get('title') as string
   const description = formData.get('description') as string
   const price = Number(formData.get('price'))
+  const category = formData.get('category') as string
 
   await prisma.course.create({
     data: {
@@ -27,6 +34,8 @@ export async function createCourse(formData: FormData) {
       slug: slugify(title),
       description,
       price,
+      category,
+      userId: dbUser.id, 
     },
   })
 
@@ -34,41 +43,71 @@ export async function createCourse(formData: FormData) {
 }
 
 export async function deleteCourse(id: string) {
-  const { userId } = await auth()
-  if (!userId) throw new Error('Unauthorized')
+  const { userId: clerkUserId } = await auth()
+  if (!clerkUserId) throw new Error('Unauthorized')
 
-  await prisma.course.delete({ where: { id } })
+  const dbUser = await prisma.user.findUnique({
+    where: { clerkId: clerkUserId },
+  })
 
-  revalidatePath('/dashboard/courses')
-}
+  if (!dbUser) throw new Error('User not found')
 
-export async function updateCourse(formData: FormData) {
-  const { userId } = await auth()
-  if (!userId) throw new Error('Unauthorized')
-
-  const id = formData.get('id') as string
-  const title = formData.get('title') as string
-  const description = formData.get('description') as string
-
-  if (!id || !title || !description) {
-    throw new Error('Invalid data')
-  }
-
-  await prisma.course.update({
-    where: { id },
-    data: {
-      title,
-      description,
-      slug: title.toLowerCase().replace(/\s+/g, '-'),
+  await prisma.course.delete({
+    where: {
+      id,
+      userId: dbUser.id,
     },
   })
 
   revalidatePath('/dashboard/courses')
 }
 
+export async function updateCourse(formData: FormData) {
+  const { userId: clerkUserId } = await auth()
+  if (!clerkUserId) throw new Error('Unauthorized')
+
+  const dbUser = await prisma.user.findUnique({
+    where: { clerkId: clerkUserId },
+  })
+
+  if (!dbUser) throw new Error('User not found')
+
+  const id = formData.get('id') as string
+  const title = formData.get('title') as string
+  const description = formData.get('description') as string
+  const category = formData.get('category') as string
+  const price = Number(formData.get('price'))
+
+  if (!id || !title || !description) {
+    throw new Error('Invalid data')
+  }
+
+  await prisma.course.update({
+  where: {
+    id,
+    userId: dbUser.id,
+  },
+  data: {
+    title,
+    description,
+    category,
+    price,
+    slug: slugify(title),
+  },
+})
+
+  revalidatePath('/dashboard/courses')
+}
+
 export async function updateThumbnail(formData: FormData) {
-  const { userId } = await auth()
-  if (!userId) throw new Error('Unauthorized')
+  const { userId: clerkUserId } = await auth()
+  if (!clerkUserId) throw new Error('Unauthorized')
+
+  const dbUser = await prisma.user.findUnique({
+    where: { clerkId: clerkUserId },
+  })
+
+  if (!dbUser) throw new Error('User not found')
 
   const id = formData.get('id') as string
   const file = formData.get('file') as File
@@ -94,8 +133,11 @@ export async function updateThumbnail(formData: FormData) {
 
   const imageUrl = `/uploads/${filename}`
 
-  const existing = await prisma.course.findUnique({
-  where: { id },
+  const existing = await prisma.course.findFirst({
+  where: {
+    id,
+    userId: dbUser.id,
+  },
   select: { thumbnail: true },
 })
 
@@ -112,7 +154,7 @@ if (existing?.thumbnail) {
 }
 
   await prisma.course.update({
-    where: { id },
+    where: { id, userId: dbUser.id },
     data: {
       thumbnail: imageUrl,
     },
@@ -148,6 +190,59 @@ export async function deleteThumbnail(courseId: string) {
   await prisma.course.update({
     where: { id: courseId },
     data: { thumbnail: null },
+  })
+
+  revalidatePath('/dashboard/courses')
+}
+
+export async function publishCourse(courseId: string) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) throw new Error('Unauthorized')
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId },
+  })
+  if (!user) throw new Error('User not found')
+
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+  })
+  if (!course) throw new Error('Course not found')
+
+  // 🔐 hanya owner atau admin
+  if (course.userId !== user.id && user.role !== 'admin') {
+    throw new Error('Forbidden')
+  }
+
+  await prisma.course.update({
+    where: { id: courseId },
+    data: { isPublished: true },
+  })
+
+  revalidatePath('/dashboard/courses')
+}
+
+export async function unpublishCourse(courseId: string) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) throw new Error('Unauthorized')
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId },
+  })
+  if (!user) throw new Error('User not found')
+
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+  })
+  if (!course) throw new Error('Course not found')
+
+  if (course.userId !== user.id && user.role !== 'admin') {
+    throw new Error('Forbidden')
+  }
+
+  await prisma.course.update({
+    where: { id: courseId },
+    data: { isPublished: false },
   })
 
   revalidatePath('/dashboard/courses')

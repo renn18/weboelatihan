@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { ButtonHTMLAttributes, ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
+import Header from "@/components/Header";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -139,6 +140,7 @@ export default function HomePage() {
 
   return (
     <>
+      <Header />
       <section className="pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-12">

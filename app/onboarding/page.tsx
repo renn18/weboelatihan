@@ -125,10 +125,10 @@ export default function OnboardingComponent() {
                                     defaultValue=""
                                     className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
                                 >
-                                    <option value="" disabled>Pilih kategori...</option>
-                                    <option value="ecommerce">E-Commerce</option>
-                                    <option value="portfolio">Portofolio</option>
-                                    <option value="blog">Blog / Publikasi</option>
+                                    <option value="" disabled>Pilih Minat...</option>
+                                    <option value="webdev">Web Development</option>
+                                    <option value="iot">Internet of Thinking</option>
+                                    <option value="softwareDev">Software Development</option>
                                     <option value="saas">SaaS / Software</option>
                                     <option value="other">Lainnya</option>
                                 </select>

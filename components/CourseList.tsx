@@ -18,8 +18,8 @@ export default async function CourseList() {
 
     if (courses.length === 0) {
         return (
-            <div className="text-center p-10 border border-gray-200 rounded-lg bg-gray-50">
-                <p className="text-xl font-semibold text-gray-700">Tidak ada kursus yang ditemukan.</p>
+            <div className="text-center p-10 border border-gray-500 bg-none rounded-lg">
+                <p className="text-xl font-semibold text-gray-700 dark:text-gray-100">Tidak ada kursus yang ditemukan.</p>
                 <p className="text-gray-500 mt-2">Silakan buat kursus baru menggunakan formulir di atas.</p>
             </div>
         );
@@ -30,16 +30,16 @@ export default async function CourseList() {
             {courses.map((course) => (
                 <div
                     key={course.id}
-                    className="bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden"
+                    className="bg-white dark:bg-gray-800 border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden"
                 >
                     <div className="p-5">
-                        <h3 className="text-xl font-bold text-gray-900 line-clamp-2">{course.title}</h3>
-                        <p className="mt-2 text-sm text-gray-600 line-clamp-3">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-200 line-clamp-2">{course.title}</h3>
+                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-100 line-clamp-3">
                             {course.description || "Tidak ada deskripsi tersedia."}
                         </p>
                     </div>
 
-                    <div className="px-5 py-4 border-t bg-gray-50 flex justify-between items-center">
+                    <div className="px-5 py-4 border-t bg-gray-50 dark:bg-gray-600 flex justify-between items-center">
                         <span className={`px-3 py-1 text-xs font-semibold rounded-full ${course.isPublished
                             ? 'bg-green-100 text-green-800'
                             : 'bg-yellow-100 text-yellow-800'
@@ -47,7 +47,7 @@ export default async function CourseList() {
                             {course.isPublished ? 'Terbit' : 'Draf'}
                         </span>
 
-                        <span className="text-lg font-bold text-blue-600">
+                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
                             {/* Format harga ke Rupiah */}
                             {new Intl.NumberFormat('id-ID', {
                                 style: 'currency',

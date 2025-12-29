@@ -30,6 +30,9 @@ export async function completeOnboarding(formData: FormData) {
       create: {
         clerkId: userId,
         role: 'user',
+        name: applicationName,
+        fav: [ applicationType  ],
+        
       },
       update: {},
     })

@@ -5,7 +5,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 
 export function NavbarActions() {
     return (
-        <div className='flex items-center gap-7'>
+        <div className='flex justify-end items-center space-x-4 p-4'>
             <ThemeToggle />
             <SignedOut>
                 <SignInButton />

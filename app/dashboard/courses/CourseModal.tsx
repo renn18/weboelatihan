@@ -57,6 +57,20 @@ export default function CourseModal({ course }: Props) {
             required
           />
 
+          <Input
+            name="category"
+            defaultValue={course?.category ?? ''}
+            placeholder="Kategori"
+            required
+          />
+
+          <Input
+            name="price"
+            type="number"
+            defaultValue={course?.price ?? 0}
+            placeholder="Harga"
+          />
+
           <Button className="w-full">
             {isEdit ? 'Simpan Perubahan' : 'Simpan'}
           </Button>
