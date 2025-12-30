@@ -4,7 +4,6 @@ import DashboardClient from './DashboardClient'
 
 export default async function DashboardPage() {
     const { sessionClaims } = await auth()
-
     if (sessionClaims?.metadata.onboardingComplete !== true) {
         redirect('/onboarding')
     }

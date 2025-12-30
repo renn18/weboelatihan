@@ -47,14 +47,20 @@ export default async function CourseList() {
                             {course.isPublished ? 'Terbit' : 'Draf'}
                         </span>
 
-                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                            {/* Format harga ke Rupiah */}
-                            {new Intl.NumberFormat('id-ID', {
-                                style: 'currency',
-                                currency: 'IDR',
-                                minimumFractionDigits: 0
-                            }).format(course.price)}
-                        </span>
+
+                        {course.price === 0 ?
+                            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                Gratis
+                            </span> :
+                            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                {/* Format harga ke Rupiah */}
+                                {new Intl.NumberFormat('id-ID', {
+                                    style: 'currency',
+                                    currency: 'IDR',
+                                    minimumFractionDigits: 0
+                                }).format(course.price)}
+                            </span>
+                        }
                     </div>
                 </div>
             ))}

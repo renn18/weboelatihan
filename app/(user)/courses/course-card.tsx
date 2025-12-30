@@ -1,5 +1,6 @@
 'use client'
 
+import { EnrollButton } from '@/components/EnrollButton'
 import Image from 'next/image'
 import Link from 'next/link'
 

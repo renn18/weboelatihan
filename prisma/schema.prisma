@@ -14,29 +14,245 @@ datasource db {
 }
 
 model User {
-  id      String   @id @default(cuid())
-  clerkId String   @unique
+  id      String  @id @default(cuid())
+  clerkId String  @unique
   name    String?
-  email   String?  @unique
+  email   String? @unique
   image   String?
-  role    String   @default("user")
-  fav     String[] @default([])
+  role    String  @default("user") // "user", "instructor", "admin"
 
-  courses Course[]
+  // Relations
+  courses      Course[] // Courses created by user/instructor
+  enrollments  Enrollment[] // Courses user enrolled in
+  certificates Certificate[]
+  payments     Payment[]
+  progress     Progress[]
+
+  createdAt DateTime @default(now())
+
+  @@index([clerkId])
+  @@index([email])
 }
 
+// ==================== COURSE MODELS ====================
+
 model Course {
-  id          String   @id @default(uuid())
-  title       String   @unique
-  category    String
-  slug        String   @unique // URL yang ramah SEO
-  description String?
-  thumbnail   String?  @default("https://via.placeholder.com/150")
-  price       Int      @default(0)
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String  @id @default(uuid())
+  title       String  @unique
+  slug        String  @unique
+  description String? @db.Text
+  thumbnail   String? @default("https://via.placeholder.com/500x300")
+
+  // Course Details
+  category String
+  level    String @default("beginner") // "beginner", "intermediate", "advanced"
+  price    Int    @default(0) // in cents (e.g., 99900 = Rp 999)
+  duration Int? // in hours
+
+  // Status
+  isPublished Boolean @default(false)
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  sections     Section[]
+  enrollments  Enrollment[]
+  certificates Certificate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([slug])
+  @@index([category])
+}
+
+// Course Sections (chapters/parts of a course)
+model Section {
+  id          String  @id @default(cuid())
+  title       String
+  description String? @db.Text
+
+  // Order
+  order Int @default(0)
+
+  // Relations
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  lessons Lesson[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([courseId, order])
+  @@index([courseId])
+}
+
+// Lessons within sections (actual course content)
+model Lesson {
+  id          String  @id @default(cuid())
+  title       String
+  description String? @db.Text
+
+  // Content
+  content  String? @db.Text // HTML content
+  videoUrl String? // URL to video (for future implementation)
+  duration Int? // in minutes
+
+  // Order
+  order Int @default(0)
+
+  // Status
+  isFree Boolean @default(false) // Preview lesson without enrollment
+
+  // Relations
+  sectionId String
+  section   Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  progress Progress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sectionId, order])
+  @@index([sectionId])
+}
+
+// ==================== ENROLLMENT MODELS ====================
+
+model Enrollment {
+  id String @id @default(cuid())
+
+  // User taking the course
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Course being taken
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // Status
+  status String @default("active") // "active", "completed", "cancelled"
+
+  // Progress tracking
+  progress Progress[]
+
+  // Relations
+  payment     Payment?
+  certificate Certificate?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
+}
+
+// Track progress for each lesson
+model Progress {
+  id String @id @default(cuid())
+
+  // User
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Enrollment
+  enrollmentId String
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  // Lesson
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  // Status
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+
+  // Time spent (in minutes)
+  timeSpent Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([enrollmentId])
+  @@index([lessonId])
+}
+
+// ==================== PAYMENT MODELS ====================
+
+model Payment {
+  id String @id @default(cuid())
+
+  // References
+  enrollmentId String     @unique
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId String
+
+  // Payment Details
+  amount        Int // in cents
+  currency      String  @default("IDR")
+  paymentMethod String? // credit_card, bank_transfer, e_wallet, etc.
+
+  // Midtrans Integration
+  midtransOrderId  String? @unique
+  transactionToken String?
+  redirectUrl      String?
+
+  // Status
+  status String @default("pending") // "pending", "settlement", "capture", "denied", "cancel", "expire"
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  settledAt DateTime?
+
+  @@index([enrollmentId])
+  @@index([userId])
+  @@index([status])
+  @@index([midtransOrderId])
+}
+
+// ==================== CERTIFICATE MODELS ====================
+
+model Certificate {
+  id String @id @default(cuid())
+
+  // References
+  enrollmentId String     @unique
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // Certificate Details
+  certificateNumber String    @unique // Unique identifier (hash-based)
+  issuedAt          DateTime  @default(now())
+  expiresAt         DateTime? // Optional: if certificate has expiration
+
+  // Verification
+  verificationHash String  @unique // SHA-256 hash for verification
+  isVerified       Boolean @default(true)
+
+  // Status
+  status String @default("active") // "active", "revoked", "expired"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([certificateNumber])
+  @@index([verificationHash])
 }
