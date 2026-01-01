@@ -101,6 +101,9 @@ model Lesson {
   videoUrl String? // URL to video (for future implementation)
   duration Int? // in minutes
 
+  difficulty String? // 'beginner', 'intermediate', 'advanced'
+  objectives String? @db.Text // Separated by newline
+
   // Order
   order Int @default(0)
 
@@ -179,8 +182,8 @@ model Progress {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, lessonId])
+  @@unique([enrollmentId, lessonId])
   @@index([userId])
-  @@index([enrollmentId])
   @@index([lessonId])
 }
 

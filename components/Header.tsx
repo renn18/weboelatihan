@@ -55,10 +55,14 @@ const Header = () => {
                     </div>
 
                     <div className="hidden md:flex items-center gap-8">
-                        <Link href="#" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Beranda</Link>
-                        <Link href="#" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Kursus</Link>
-                        <Link href="#" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Mentor</Link>
-                        <Link href="#" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Tentang Kami</Link>
+                        <Link href="/" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Beranda</Link>
+                        <Link href="/courses" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Kursus</Link>
+                        <Link href="/mentors" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Mentor</Link>
+                        <Link href="/about-us" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Tentang Kami</Link>
+
+                        <SignedIn>
+                            <Link href="/dashboard" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Dashboard</Link>
+                        </SignedIn>
                     </div>
 
                     <div className="hidden md:flex items-center gap-4">

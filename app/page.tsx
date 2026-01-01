@@ -1,6 +1,5 @@
 'use client';
 
-
 import Link from "next/link";
 import {
   BookOpen,
@@ -22,6 +21,7 @@ import {
 import { ButtonHTMLAttributes, ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import Header from "@/components/Header";
+import { useRouter } from "next/navigation";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -101,6 +101,8 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const router = useRouter();
+
   const categories: Category[] = [
     { name: 'Pengembangan Web', icon: <Code size={24} />, count: '120+ Kursus', color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' },
     { name: 'Desain UI/UX', icon: <Layout size={24} />, count: '85+ Kursus', color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400' },
@@ -153,8 +155,8 @@ export default function HomePage() {
                 Akses ribuan kursus berkualitas tinggi yang diajarkan oleh para profesional industri. Mulai belajar hari ini dan bangun karir impianmu.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Button className="text-lg px-8">Mulai Belajar <ArrowRight size={20} /></Button>
-                <Button variant="secondary" className="text-lg px-8">Lihat Kursus <PlayCircle size={20} /></Button>
+                <Button onClick={() => router.push('/my-courses')} className="text-lg px-8">Mulai Belajar <ArrowRight size={20} /></Button>
+                <Button onClick={() => router.push('/courses')} variant="secondary" className="text-lg px-8">Lihat Kursus <PlayCircle size={20} /></Button>
               </div>
               <div className="mt-8 flex items-center justify-center lg:justify-start gap-4 text-sm text-gray-500 dark:text-gray-400">
                 <div className="flex -space-x-2">

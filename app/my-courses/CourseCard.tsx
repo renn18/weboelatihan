@@ -25,7 +25,7 @@ export default function CourseCard({ courseData }: CourseCardProps) {
     const course = courseData.course
 
     const handleNavigate = () => {
-        router.push(`/courses/${course.slug}`)
+        router.push(`/learn/${course.slug}`)
     }
 
     const getInitials = (name: string) => {
@@ -99,7 +99,7 @@ export default function CourseCard({ courseData }: CourseCardProps) {
 
                         {/* Course Info */}
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 drop-shadow-sm">
+                            <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 drop-shadow-sm">
                                 {course.title}
                             </h3>
 

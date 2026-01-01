@@ -31,7 +31,7 @@ export async function completeOnboarding(formData: FormData) {
         clerkId: userId,
         role: 'user',
         name: applicationName,
-        fav: [ applicationType  ],
+        fav: applicationType,
         
       },
       update: {},
