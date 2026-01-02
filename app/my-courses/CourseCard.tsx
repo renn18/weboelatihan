@@ -17,6 +17,9 @@ interface CourseCardProps {
             }
         }
         enrolledAt: Date
+        totalLessons: number
+        completedLessons: number
+        progress: number
     }
 }
 
@@ -99,7 +102,7 @@ export default function CourseCard({ courseData }: CourseCardProps) {
 
                         {/* Course Info */}
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 drop-shadow-sm">
+                            <h3 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 drop-shadow-sm">
                                 {course.title}
                             </h3>
 
@@ -114,19 +117,33 @@ export default function CourseCard({ courseData }: CourseCardProps) {
                     </div>
                 </div>
 
-                {/* Progress Placeholder */}
+                {/* ✅ UPDATED: Progress Bar with Data */}
                 <div className="mb-10 p-6 bg-gradient-to-r from-gray-50/80 to-blue-50/80 dark:from-gray-800/80 dark:to-blue-900/20 rounded-2xl backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 shadow-inner">
                     <div className="flex justify-between items-center mb-4">
                         <span className="text-xl font-semibold text-gray-700 dark:text-gray-300">
                             📊 Progress
                         </span>
-                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400 animate-pulse">
-                            Siap Dimulai
+                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                            {courseData.progress}%
                         </span>
                     </div>
 
-                    <div className="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-full h-4 shadow-inner overflow-hidden">
-                        <div className="bg-gradient-to-r from-gray-400/60 to-gray-500/60 dark:from-gray-500/60 dark:to-gray-600/60 h-4 rounded-full shadow-lg w-4 animate-pulse" />
+                    <div className="w-full bg-gray-200/50 dark:bg-gray-700/50 rounded-full h-4 shadow-inner overflow-hidden mb-3">
+                        <div
+                            className={`
+                h-4 rounded-full shadow-lg transition-all duration-700 ease-out
+                ${courseData.progress === 100
+                                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600'
+                                    : 'bg-gradient-to-r from-blue-500 to-indigo-600'
+                                }
+              `}
+                            style={{ width: `${courseData.progress}%` }}
+                        />
+                    </div>
+
+                    <div className="flex justify-between text-xs font-bold text-gray-600 dark:text-gray-400">
+                        <span>{courseData.completedLessons} dari {courseData.totalLessons} pelajaran</span>
+                        <span>{courseData.totalLessons - courseData.completedLessons} lagi</span>
                     </div>
                 </div>
 
@@ -137,7 +154,9 @@ export default function CourseCard({ courseData }: CourseCardProps) {
                         className="group/btn flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 dark:from-blue-600 dark:to-indigo-700 dark:hover:from-blue-700 dark:hover:to-indigo-800 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 ring-2 ring-blue-200/50 hover:ring-blue-300/70 dark:ring-blue-900/50 backdrop-blur-sm"
                     >
                         <span className="text-xl group-hover/btn:scale-125 group-hover/btn:rotate-6 transition-all duration-300">▶️</span>
-                        <span className="tracking-wide font-semibold">Lanjut Belajar</span>
+                        <span className="tracking-wide font-semibold">
+                            {courseData.progress === 100 ? '🎉 Selesai!' : 'Lanjut Belajar'}
+                        </span>
                     </button>
                 </div>
             </div>

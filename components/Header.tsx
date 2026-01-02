@@ -5,6 +5,7 @@ import React, { ButtonHTMLAttributes, ReactNode, useEffect, useState } from 'rea
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import { ThemeToggle } from "@/components/theme-toggle"
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     children: ReactNode;
@@ -43,6 +44,8 @@ const Header = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const router = useRouter();
+
     return (
         <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,7 +64,7 @@ const Header = () => {
                         <Link href="/about-us" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Tentang Kami</Link>
 
                         <SignedIn>
-                            <Link href="/dashboard" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Dashboard</Link>
+                            <button onClick={() => router.push('/dashboard')} className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Dashboard</button>
                         </SignedIn>
                     </div>
 
