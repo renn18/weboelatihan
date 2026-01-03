@@ -254,6 +254,8 @@ model Certificate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([userId, courseId])
+  @@index([enrollmentId])
   @@index([userId])
   @@index([courseId])
   @@index([certificateNumber])
