@@ -1,59 +1,54 @@
-import { auth, clerkClient } from '@clerk/nextjs/server'
+import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
-import UserTable from './user-table'
+import Link from 'next/link'
+import AdminUsersClient from './AdminUsersClient'
 
-type UserDTO = {
-    id: string
-    name: string
-    email: string
-    role: 'admin' | 'user'
-}
+export default async function AdminUsersPage() {
+    const { userId: clerkUserId } = await auth()
 
-export default async function UsersPage() {
-    // 1️⃣ Ambil Clerk user ID
-    const { userId: clerkId } = await auth()
-    if (!clerkId) redirect('/sign-in')
+    if (!clerkUserId) {
+        redirect('/sign-in')
+    }
 
-    // 2️⃣ Ambil role dari PRISMA
-    const currentUser = await prisma.user.findUnique({
-        where: { clerkId },
-        select: { role: true },
+    const admin = await prisma.user.findUnique({
+        where: { clerkId: clerkUserId },
     })
 
-    // 3️⃣ BLOCK kalau bukan admin
-    if (currentUser?.role !== 'admin') {
+    if (!admin || admin.role !== 'admin') {
         redirect('/')
     }
 
-    // 4️⃣ Ambil user dari CLERK (data identity)
-    const client = await clerkClient()
-    const users = await client.users.getUserList({ limit: 100 })
-
-    // 5️⃣ Ambil role dari PRISMA (JOIN MANUAL)
-    const prismaUsers = await prisma.user.findMany({
+    // Fetch all users
+    const users = await prisma.user.findMany({
         select: {
+            id: true,
             clerkId: true,
+            email: true,
+            name: true,
             role: true,
+            image: true,
+            createdAt: true,
+            _count: {
+                select: {
+                    courses: true,
+                    enrollments: true,
+                },
+            },
         },
+        orderBy: { createdAt: 'desc' },
     })
 
-    const roleMap = new Map(
-        prismaUsers.map(u => [u.clerkId, u.role])
-    )
-
-    // 6️⃣ SERIALIZE (AMAN KE CLIENT)
-    const serializedUsers: UserDTO[] = users.data.map(u => ({
-        id: u.id,
-        name: `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim() || '—',
-        email: u.emailAddresses[0]?.emailAddress ?? '-',
-        role: (roleMap.get(u.id) as 'admin' | 'user') ?? 'user',
-    }))
-
     return (
-        <div className="p-6 space-y-6">
-            <h1 className="text-2xl font-bold">Manajemen User</h1>
-            <UserTable users={serializedUsers} />
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-950">
+
+            {/* Content */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <h1 className="text-3xl font-black mb-10 text-gray-900 dark:text-white">
+                    👥 Kelola Pengguna
+                </h1>
+                <AdminUsersClient users={users} />
+            </div>
         </div>
     )
 }

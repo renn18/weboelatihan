@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface Certificate {
     id: string
@@ -165,7 +166,9 @@ export default function StudentEnrollmentsClient({
                             {/* Course Thumbnail */}
                             <div className="relative h-40 bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden">
                                 {enrollment.course.thumbnail ? (
-                                    <img
+                                    <Image
+                                        width={400}
+                                        height={160}
                                         src={enrollment.course.thumbnail}
                                         alt={enrollment.course.title}
                                         className="w-full h-full object-cover hover:scale-110 transition-transform"
@@ -180,10 +183,10 @@ export default function StudentEnrollmentsClient({
                                 <div className="absolute top-3 right-3">
                                     <span
                                         className={`px-3 py-1 text-xs font-bold rounded-full ${enrollment.status === 'completed'
-                                                ? 'bg-green-500/90 text-white'
-                                                : enrollment.status === 'active'
-                                                    ? 'bg-blue-500/90 text-white'
-                                                    : 'bg-gray-500/90 text-white'
+                                            ? 'bg-green-500/90 text-white'
+                                            : enrollment.status === 'active'
+                                                ? 'bg-blue-500/90 text-white'
+                                                : 'bg-gray-500/90 text-white'
                                             }`}
                                     >
                                         {enrollment.status === 'completed'
@@ -245,10 +248,10 @@ export default function StudentEnrollmentsClient({
                                         <div className="flex items-center gap-2">
                                             <span
                                                 className={`text-xs px-2 py-1 rounded font-semibold ${enrollment.certificate.status === 'active'
-                                                        ? 'bg-green-200 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                                        : enrollment.certificate.status === 'revoked'
-                                                            ? 'bg-red-200 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                                                            : 'bg-orange-200 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+                                                    ? 'bg-green-200 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                                    : enrollment.certificate.status === 'revoked'
+                                                        ? 'bg-red-200 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                                        : 'bg-orange-200 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
                                                     }`}
                                             >
                                                 {enrollment.certificate.status === 'active'

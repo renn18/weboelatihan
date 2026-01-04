@@ -89,7 +89,6 @@ export default async function LearnPage({ params, searchParams }: PageProps) {
         where: {
             userId: dbUser.id,
             courseId: course.id,
-            status: 'active',
         },
         include: {
             progress: {

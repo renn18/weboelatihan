@@ -1,92 +1,132 @@
 import Header from '@/components/Header'
-import Image from 'next/image'
+import CourseCard from '@/components/CourseCard'
+import CoursesFilter from '@/components/CoursesFilter'
 import Link from 'next/link'
 
-async function getCourses() {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/courses`, {
-        cache: 'no-store',
-    })
-    return res.json()
+interface Course {
+    id: string
+    title: string
+    slug: string
+    description?: string
+    thumbnail?: string
+    category: string
+    price: number
+    user: {
+        name?: string
+    }
+    isPublished: boolean
 }
 
-export default async function CoursesPage() {
-    const { data: courses } = await getCourses()
+async function getCourses(): Promise<Course[]> {
+    try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/courses`, {
+            cache: 'no-store',
+        })
+        const data = await res.json()
+        return data.data || []
+    } catch (error) {
+        console.error('Error fetching courses:', error)
+        return []
+    }
+}
+
+export default async function CoursesPage({
+    searchParams,
+}: {
+    searchParams?: Promise<{ search?: string; category?: string }>
+}) {
+    const courses = await getCourses()
+    const params = await searchParams
+    const searchQuery = params?.search || ''
+    const selectedCategory = params?.category || 'all'
+
+    // Get unique categories
+    const categories = ['all', ...new Set(courses.map(c => c.category).filter(Boolean))]
+
+    // Filter courses
+    const filteredCourses = courses.filter(course => {
+        const matchesSearch =
+            course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            course.description?.toLowerCase().includes(searchQuery.toLowerCase())
+
+        const matchesCategory =
+            selectedCategory === 'all' || course.category === selectedCategory
+
+        return matchesSearch && matchesCategory
+    })
 
     if (!courses || courses.length === 0) {
         return (
-            <div className="max-w-4xl mx-auto p-8 text-center">
-                <h1 className="text-3xl font-bold mb-4">Kursus</h1>
-                <p>Belum ada kursus tersedia</p>
-            </div>
+            <>
+                <Header />
+                <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-8">
+                    <div className="text-center max-w-md">
+                        <div className="text-6xl mb-6">📚</div>
+                        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                            Belum Ada Kursus
+                        </h1>
+                        <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+                            Kursus akan segera tersedia. Silahkan kembali nanti
+                        </p>
+                    </div>
+                </div>
+            </>
         )
     }
 
     return (
         <>
             <Header />
-            <section className="pt-32 lg:pt-30 overflow-hidden">
-                <div className="max-w-6xl mx-auto">
-                    <div className="mb-8">
-                        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                            Semua Kursus
+            <section className="pt-32 lg:pt-30 overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-950 min-h-screen pb-20">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                    {/* Header */}
+                    <div className="mb-12">
+                        <h1 className="text-5xl font-black bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-4">
+                            🎓 Semua Kursus
                         </h1>
                         <p className="text-xl text-gray-600 dark:text-gray-300">
-                            Pilih kursus yang ingin Anda ikuti
+                            Temukan dan pilih kursus yang sesuai dengan kebutuhan Anda
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {courses.map((course: any) => (
-                            <Link
-                                key={course.id}
-                                href={`/courses/${course.slug}`}
-                                className="group block p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border hover:border-blue-200"
-                            >
-                                <div className="relative h-48 rounded-xl overflow-hidden mb-4 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 group-hover:scale-105 transition-transform duration-300">
-                                    {course.thumbnail ? (
-                                        <Image
-                                            width={400}
-                                            height={300}
-                                            src={course.thumbnail}
-                                            alt={course.title}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <span className="text-gray-400 text-sm">Preview</span>
-                                        </div>
-                                    )}
-                                </div>
+                    {/* Search & Filter Component */}
+                    <CoursesFilter categories={categories} courses={courses} />
 
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-blue-600">
-                                    {course.title}
-                                </h3>
-
-                                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
-                                    {course.description}
-                                </p>
-
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2 text-sm">
-                                        {course.category && (
-                                            <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full">
-                                                {course.category}
-                                            </span>
-                                        )}
-                                        <span className="text-gray-500">
-                                            oleh {course.user.name}
-                                        </span>
-                                    </div>
-
-                                    <div className="text-right">
-                                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                                            {course.price === 0 ? 'Gratis' : `Rp ${course.price.toLocaleString()}`}
-                                        </div>
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
+                    {/* Results Count */}
+                    <div className="mb-8">
+                        <p className="text-lg font-semibold text-gray-600 dark:text-gray-300">
+                            {filteredCourses.length === 0
+                                ? '❌ Tidak ada kursus yang sesuai'
+                                : `✅ Menampilkan ${filteredCourses.length} kursus`}
+                        </p>
                     </div>
+
+                    {/* Courses Grid */}
+                    {filteredCourses.length === 0 ? (
+                        <div className="text-center py-20 px-8 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-3xl border border-white/70 dark:border-gray-700/70">
+                            <div className="text-6xl mb-6">🔎</div>
+                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                                Kursus Tidak Ditemukan
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
+                                Coba ubah pencarian atau pilih kategori lain
+                            </p>
+                            <Link
+                                href="/courses"
+                                className="inline-flex items-center gap-2 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                            >
+                                <span>🔄</span>
+                                Reset Filter
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {filteredCourses.map(course => (
+                                <CourseCard key={course.id} course={course} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </section>
         </>
