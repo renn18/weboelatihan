@@ -31,8 +31,7 @@ export async function completeOnboarding(formData: FormData) {
         clerkId: userId,
         role: 'user',
         name: applicationName,
-        fav: applicationType,
-        
+        email: (await client.users.getUser(userId)).emailAddresses[0]?.emailAddress || '',
       },
       update: {},
     })

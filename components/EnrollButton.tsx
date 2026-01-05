@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react'
 import { useEffect, useState } from 'react'
-import { enrollCourse, enrollAndPay } from '@/app/(user)/courses/[slug]/action'
+import { enrollCourse, enrollAndPay } from '@/app/courses/[slug]/action'
 
 interface EnrollButtonProps {
     courseId: string

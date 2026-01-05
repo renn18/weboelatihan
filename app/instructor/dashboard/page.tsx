@@ -19,7 +19,7 @@ export default async function InstructorDashboardPage() {
         where: { clerkId: clerkUserId },
     })
 
-    if (!dbUser || dbUser.role !== 'instructor') {
+    if (!dbUser || dbUser.role == 'user') {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">

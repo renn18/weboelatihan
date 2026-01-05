@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 
 interface CourseDetailClientProps {
-    courseId: string
+    courseSlug: string
     price: number
     isEnrolled: boolean
     enrollmentStatus?: string
@@ -20,7 +20,7 @@ declare global {
 }
 
 export default function CourseDetailClient({
-    courseId,
+    courseSlug,
     price,
     isEnrolled,
     enrollmentStatus,
@@ -58,7 +58,7 @@ export default function CourseDetailClient({
 
         // If already enrolled - redirect to learn
         if (isEnrolled) {
-            router.push(`/courses/${courseId}/learn`)
+            router.push(`/learn/${courseSlug}`)
             return
         }
 
@@ -71,14 +71,14 @@ export default function CourseDetailClient({
                 const res = await fetch('/api/enrollments', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ courseId }),
+                    body: JSON.stringify({ courseSlug }),
                 })
 
                 const data = await res.json()
 
                 if (data.success) {
                     alert('✅ Berhasil enroll kelas gratis!')
-                    router.push(`/courses/${courseId}/learn`)
+                    router.push(`/learn/${courseSlug}`)
                 } else {
                     setError(data.error || 'Gagal enroll')
                 }
@@ -87,7 +87,7 @@ export default function CourseDetailClient({
                 const res = await fetch('/api/payments/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ courseId }),
+                    body: JSON.stringify({ courseSlug }),
                 })
 
                 const data = await res.json()
@@ -96,7 +96,7 @@ export default function CourseDetailClient({
                     window.snap.pay(data.transactionToken, {
                         onSuccess: () => {
                             alert('✅ Pembayaran berhasil!')
-                            router.push(`/courses/${courseId}/learn`)
+                            router.push(`/learn/${courseSlug}`)
                         },
                         onPending: () => {
                             alert('⏳ Pembayaran pending')
@@ -169,10 +169,10 @@ export default function CourseDetailClient({
                     onClick={handleEnroll}
                     disabled={loading}
                     className={`w-full py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${isEnrolled
-                            ? 'bg-emerald-600 text-white'
-                            : price === 0
-                                ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white'
-                                : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white'
+                        ? 'bg-emerald-600 text-white'
+                        : price === 0
+                            ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white'
+                            : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white'
                         }`}
                 >
                     {loading && (

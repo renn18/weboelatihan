@@ -223,7 +223,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
                         {/* Enrollment Card */}
                         <CourseDetailClient
-                            courseId={course.id}
+                            courseSlug={course.slug}
                             price={course.price}
                             isEnrolled={!!enrollment}
                             enrollmentStatus={enrollment?.status}

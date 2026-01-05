@@ -1,55 +1,25 @@
-import { prisma } from '@/lib/prisma'
-import CourseList from '@/components/CourseList'
-import { Card, CardContent } from '@/components/ui/card'
-import { BookOpen, Users, GraduationCap } from 'lucide-react'
+'use client'
 
-export default async function DashboardClient() {
-    const users = await prisma.user.findFirst({
-        select: {
-            name: true,
-            role: true,
-        },
-    })
+import { useState, useEffect } from 'react'
+import { RefreshCw } from 'lucide-react'
+
+export default function AdminDashboardClient() {
+    const [isRefreshing, setIsRefreshing] = useState(false)
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true)
+        // Revalidate page data
+        window.location.reload()
+    }
 
     return (
-        <div className='w-full'>
-            <div className=" p-6 space-y-8">
-                {/* Header */}
-                <div className="text-center space-y-2">
-                    <h1 className="text-3xl font-bold">Selamat Datang, {users?.name}</h1>
-                    <p className="text-muted-foreground">
-                        Login sebagai {users?.role === 'admin' ? 'Admin' : 'Peserta'}
-                    </p>
-                </div>
-
-                {/* Statistik */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[
-                        { title: 'Total Kelas', value: '24', icon: <BookOpen className="w-5 h-5" /> },
-                        { title: 'Peserta Aktif', value: '1.240', icon: <Users className="w-5 h-5" /> },
-                        { title: 'Instruktur', value: '18', icon: <GraduationCap className="w-5 h-5" /> },
-                    ].map((item, i) => (
-                        <Card key={i} className="rounded-2xl">
-                            <CardContent className="p-4 flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-muted-foreground">{item.title}</p>
-                                    <p className="text-2xl font-semibold">{item.value}</p>
-                                </div>
-                                <div className="text-muted-foreground">{item.icon}</div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-
-                {/* List */}
-                <Card className="rounded-2xl">
-                    <CardContent className="p-6 space-y-4">
-                        <h2 className="text-xl font-semibold">Daftar Kelas Terbaru</h2>
-                        <CourseList />
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
-
+        <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all disabled:opacity-50"
+        >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
     )
 }
