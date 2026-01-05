@@ -61,7 +61,7 @@ const Header = () => {
                         <Link href="/" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Beranda</Link>
                         <Link href="/courses" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Kursus</Link>
                         <Link href="/mentors" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Mentor</Link>
-                        <Link href="/about-us" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Tentang Kami</Link>
+                        <Link href="/about" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Tentang Kami</Link>
 
                         <SignedIn>
                             <button onClick={() => router.push('/dashboard')} className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Dashboard</button>

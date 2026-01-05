@@ -27,7 +27,7 @@ export default async function CreateCoursePage({ searchParams }: PageProps) {
         where: { clerkId: clerkUserId },
     })
 
-    if (!dbUser || dbUser.role !== 'instructor') {
+    if (!dbUser || dbUser.role == 'user') {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 px-8">
                 <div className="text-center max-w-md">
