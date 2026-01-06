@@ -44,7 +44,7 @@ export default function OnboardingComponent() {
 
         // 3️⃣ HANDLE ERROR DARI SERVER
         if ('error' in res) {
-            setError(res.error)
+            setError(res.error || 'Terjadi kesalahan yang tidak diketahui.')
             setIsLoading(false)
             return
         }

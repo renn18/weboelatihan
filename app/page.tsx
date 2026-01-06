@@ -16,35 +16,63 @@ import {
   PlayCircle,
   Award,
   TrendingUp,
-  Globe
+  Globe,
+  Loader
 } from 'lucide-react';
 import { ButtonHTMLAttributes, ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import Header from "@/components/Header";
 import { useRouter } from "next/navigation";
+import { getCourses, getEnrollmentStatus } from "@/app/courses/[slug]/action";
+import { enrollCourse, enrollAndPay } from "@/app/courses/[slug]/action";
+
+// ✅ Types dari database
+interface CourseData {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  thumbnail: string | null;
+  price: number;
+  isPublished: boolean;
+  user: {
+    name: string | null;
+  };
+  _count?: {
+    enrollments: number;
+  };
+}
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   className?: string;
+  isLoading?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
   children,
   variant = 'primary',
   className = '',
+  isLoading = false,
+  disabled = false,
   ...props
 }) => {
   const baseStyles = "px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2";
   const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg",
-    secondary: "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700",
-    outline: "border-2 border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20",
-    ghost: "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+    primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed",
+    secondary: "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed",
+    outline: "border-2 border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed",
+    ghost: "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
   };
 
   return (
-    <button className={`${baseStyles} ${variants[variant]} ${className}`} {...props}>
+    <button
+      className={`${baseStyles} ${variants[variant]} ${className}`}
+      disabled={isLoading || disabled}
+      {...props}
+    >
+      {isLoading && <Loader size={16} className="animate-spin" />}
       {children}
     </button>
   );
@@ -72,8 +100,6 @@ const Card: React.FC<CardProps> = ({ children, className = "" }) => (
   </div>
 );
 
-// --- Antarmuka Data ---
-
 interface Category {
   name: string;
   icon: ReactNode;
@@ -81,27 +107,108 @@ interface Category {
   color: string;
 }
 
-interface FeaturedCourse {
-  title: string;
-  instructor: string;
-  rating: number;
-  students: string;
-  price: string;
-  image: string;
-  tag: string;
-}
-
 export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
+  const [courses, setCourses] = useState<CourseData[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
+  const [userEnrollments, setUserEnrollments] = useState<Map<string, string>>(new Map());
+
+  const router = useRouter();
+
+  // ✅ Load courses dari database
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        setLoading(true);
+        // Server action untuk get all published courses
+        const response = await fetch('/api/courses', {
+          method: 'GET',
+          cache: 'no-store'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setCourses(data.slice(0, 3)); // Ambil 3 teratas
+        }
+      } catch (error) {
+        console.error('Error loading courses:', error);
+        // Fallback ke dummy data jika API error
+        setCourses(mockCourses);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCourses();
+  }, []);
+
+  // ✅ Check enrollment status saat component mount
+  useEffect(() => {
+    const checkEnrollments = async () => {
+      for (const course of courses) {
+        try {
+          const status = await getEnrollmentStatus(course.id);
+          if (status) {
+            setUserEnrollments(prev => new Map(prev).set(course.id, status));
+          }
+        } catch (error) {
+          console.error(`Error checking enrollment for ${course.id}:`, error);
+        }
+      }
+    };
+
+    if (courses.length > 0) {
+      checkEnrollments();
+    }
+  }, [courses]);
+
+  const handleEnroll = async (courseId: string, price: number) => {
+    try {
+      setEnrollingCourseId(courseId);
+
+      if (price === 0) {
+        // ✅ Enroll di kursus gratis
+        const result = await enrollCourse(courseId);
+        if (result) {
+          alert('Berhasil didaftarkan! Akses kursus di dashboard Anda.');
+          setUserEnrollments(prev => new Map(prev).set(courseId, 'enrolled'));
+          router.refresh();
+        }
+      } else {
+        // ✅ Enroll di kursus berbayar - buka pembayaran
+        const result = await enrollAndPay(courseId);
+        if (result) {
+          // Open Midtrans Snap
+          if ((window as any).snap && 'transactionToken' in result) {
+            (window as any).snap.pay(result.transactionToken, {
+              onSuccess: () => {
+                alert('Pembayaran berhasil! Akses kursus sekarang.');
+                setUserEnrollments(prev => new Map(prev).set(courseId, 'enrolled'));
+                router.refresh();
+              },
+              onError: () => {
+                alert('Pembayaran gagal. Silakan coba lagi.');
+              },
+            });
+          } else if ('redirectUrl' in result) {
+            window.location.href = result.redirectUrl;
+          }
+        }
+      }
+    } catch (error: any) {
+      alert(error.message || 'Terjadi kesalahan');
+    } finally {
+      setEnrollingCourseId(null);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const router = useRouter();
 
   const categories: Category[] = [
     { name: 'Pengembangan Web', icon: <Code size={24} />, count: '120+ Kursus', color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' },
@@ -110,39 +217,50 @@ export default function HomePage() {
     { name: 'Pemasaran Digital', icon: <TrendingUp size={24} />, count: '92+ Kursus', color: 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400' },
   ];
 
-  const featuredCourses: FeaturedCourse[] = [
+  // ✅ Mock data (fallback)
+  const mockCourses: CourseData[] = [
     {
+      id: '1',
       title: "Mastering React & Next.js 15",
-      instructor: "Alex Chandra",
-      rating: 4.9,
-      students: "12,400",
-      price: "Rp 499.000",
-      image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
-      tag: "Best Seller"
+      slug: "mastering-react-next",
+      description: "Pelajari React dan Next.js secara mendalam",
+      thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
+      price: 499000,
+      isPublished: true,
+      user: { name: "Alex Chandra" },
+      _count: { enrollments: 12400 }
     },
     {
+      id: '2',
       title: "UI Design dengan Figma: Pro Level",
-      instructor: "Siska Amelia",
-      rating: 4.8,
-      students: "8,200",
-      price: "Rp 350.000",
-      image: "https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?auto=format&fit=crop&w=800&q=80",
-      tag: "Terbaru"
+      slug: "ui-design-figma",
+      description: "Desain UI profesional menggunakan Figma",
+      thumbnail: "https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?auto=format&fit=crop&w=800&q=80",
+      price: 350000,
+      isPublished: true,
+      user: { name: "Siska Amelia" },
+      _count: { enrollments: 8200 }
     },
     {
+      id: '3',
       title: "Analisis Data dengan Python",
-      instructor: "Budi Santoso",
-      rating: 4.7,
-      students: "5,600",
-      price: "Rp 425.000",
-      image: "https://images.unsplash.com/photo-1551288049-bbbda536639a?auto=format&fit=crop&w=800&q=80",
-      tag: "Populer"
+      slug: "analisis-data-python",
+      description: "Data analysis dan visualization dengan Python",
+      thumbnail: "https://images.unsplash.com/photo-1551288049-bbbda536639a?auto=format&fit=crop&w=800&q=80",
+      price: 425000,
+      isPublished: true,
+      user: { name: "Budi Santoso" },
+      _count: { enrollments: 5600 }
     }
   ];
 
   return (
     <>
       <Header />
+
+      {/* Midtrans Script */}
+      <script src="https://app.sandbox.midtrans.com/snap/snap.js" async></script>
+
       <section className="pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-12">
@@ -155,7 +273,7 @@ export default function HomePage() {
                 Akses ribuan kursus berkualitas tinggi yang diajarkan oleh para profesional industri. Mulai belajar hari ini dan bangun karir impianmu.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Button onClick={() => router.push('/my-courses')} className="text-lg px-8">Mulai Belajar <ArrowRight size={20} /></Button>
+                <Button onClick={() => router.push('/dashboard')} className="text-lg px-8">Mulai Belajar <ArrowRight size={20} /></Button>
                 <Button onClick={() => router.push('/courses')} variant="secondary" className="text-lg px-8">Lihat Kursus <PlayCircle size={20} /></Button>
               </div>
               <div className="mt-8 flex items-center justify-center lg:justify-start gap-4 text-sm text-gray-500 dark:text-gray-400">
@@ -177,11 +295,9 @@ export default function HomePage() {
                   className="w-full h-auto"
                 />
               </div>
-              {/* Elemen Dekoratif */}
               <div className="absolute -top-6 -right-6 w-32 h-32 bg-blue-100 dark:bg-blue-900/30 rounded-full mix-blend-multiply dark:mix-blend-overlay filter blur-xl opacity-70 animate-blob"></div>
               <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-purple-100 dark:bg-purple-900/30 rounded-full mix-blend-multiply dark:mix-blend-overlay filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
 
-              {/* Floating Stat Card */}
               <div className="absolute bottom-10 right-[-20px] bg-white dark:bg-gray-800 p-4 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 hidden sm:block animate-bounce-slow">
                 <div className="flex items-center gap-3">
                   <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-full text-green-600 dark:text-green-400">
@@ -198,7 +314,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Bagian Statistik */}
+      {/* Statistics Section */}
       <section className="py-12 bg-gray-50 dark:bg-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
@@ -222,7 +338,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Bagian Kategori */}
+      {/* Categories Section */}
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
@@ -230,7 +346,7 @@ export default function HomePage() {
               <h2 className="text-3xl font-bold mb-4">Kategori Populer</h2>
               <p className="text-gray-600 dark:text-gray-400 max-w-lg">Pilih jalur karirmu dan mulai belajar dari dasar hingga mahir dengan kurikulum standar industri.</p>
             </div>
-            <Button variant="outline">Lihat Semua Kategori</Button>
+            <Button variant="outline" onClick={() => router.push('/courses')}>Lihat Semua Kategori</Button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {categories.map((cat, idx) => (
@@ -246,53 +362,91 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Bagian Kursus */}
+      {/* Featured Courses Section - ✅ DARI DATABASE */}
       <section className="py-24 bg-gray-50 dark:bg-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">Kursus Terlaris Kami</h2>
             <p className="text-gray-600 dark:text-gray-400">Investasi terbaik adalah investasi pada dirimu sendiri.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredCourses.map((course, idx) => (
-              <Card key={idx} className="overflow-hidden flex flex-col group">
-                <div className="relative overflow-hidden h-48">
-                  <Image width={500} height={500}
-                    src={course.image}
-                    alt={course.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <Badge className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-blue-600 dark:text-blue-400">{course.tag}</Badge>
-                  </div>
-                </div>
-                <div className="p-6 flex-1 flex flex-col">
-                  <div className="flex items-center gap-1 text-orange-400 mb-2">
-                    <Star size={16} fill="currentColor" />
-                    <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{course.rating}</span>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">({course.students} Siswa)</span>
-                  </div>
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
-                    {course.title}
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Oleh {course.instructor}</p>
-                  <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                    <span className="text-xl font-bold text-blue-600 dark:text-blue-400">{course.price}</span>
-                    <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white transition-colors">
-                      <BookOpen size={20} />
-                    </button>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <Loader size={40} className="animate-spin text-blue-600" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {(courses.length > 0 ? courses : mockCourses).map((course) => {
+                const enrollmentStatus = userEnrollments.get(course.id);
+                const isEnrolling = enrollingCourseId === course.id;
+                const formattedPrice = new Intl.NumberFormat('id-ID', {
+                  style: 'currency',
+                  currency: 'IDR',
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0
+                }).format(course.price);
+
+                return (
+                  <Card key={course.id} className="overflow-hidden flex flex-col group">
+                    <div className="relative overflow-hidden h-48">
+                      <Image
+                        width={500}
+                        height={500}
+                        src={course.thumbnail || "https://via.placeholder.com/500x300"}
+                        alt={course.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-4 left-4">
+                        <Badge className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-blue-600 dark:text-blue-400">
+                          {course.price === 0 ? 'Gratis' : 'Berbayar'}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="p-6 flex-1 flex flex-col">
+                      <div className="flex items-center gap-1 text-orange-400 mb-2">
+                        <Star size={16} fill="currentColor" />
+                        <span className="text-sm font-bold text-gray-900 dark:text-gray-100">4.8</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">({course._count?.enrollments || 0} Siswa)</span>
+                      </div>
+                      <h3 className="text-xl font-bold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
+                        {course.title}
+                      </h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Oleh {course.user?.name || 'Instruktur'}</p>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{course.description}</p>
+                      <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                        <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                          {course.price === 0 ? 'Gratis' : formattedPrice}
+                        </span>
+                        <Button
+                          onClick={() => handleEnroll(course.id, course.price)}
+                          isLoading={isEnrolling}
+                          disabled={enrollmentStatus === 'enrolled' || isEnrolling}
+                          className={`p-2 ${enrollmentStatus === 'enrolled' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                        >
+                          {enrollmentStatus === 'enrolled' ? (
+                            <CheckCircle size={20} />
+                          ) : (
+                            <BookOpen size={20} />
+                          )}
+                        </Button>
+                      </div>
+                      {enrollmentStatus === 'enrolled' && (
+                        <p className="mt-2 text-sm text-green-600 dark:text-green-400 font-semibold">✓ Sudah terdaftar</p>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
           <div className="mt-12 text-center">
-            <Button variant="secondary" className="mx-auto">Jelajahi Semua Kursus</Button>
+            <Button variant="secondary" className="mx-auto" onClick={() => router.push('/courses')}>Jelajahi Semua Kursus</Button>
           </div>
         </div>
       </section>
 
-      {/* Bagian Mengapa Memilih Kami */}
+      {/* Why Choose Us Section */}
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-16">
@@ -348,7 +502,7 @@ export default function HomePage() {
                 Jangan tunda lagi. Dapatkan diskon 50% untuk kursus pertama bagi pendaftar baru bulan ini.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-colors">
+                <button onClick={() => router.push('/sign-up')} className="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-colors">
                   Daftar Sekarang — Gratis
                 </button>
                 <button className="bg-blue-800 dark:bg-blue-900 text-white border border-blue-500 dark:border-blue-600 px-8 py-4 rounded-xl font-bold text-lg hover:bg-blue-900 transition-colors">
@@ -356,7 +510,6 @@ export default function HomePage() {
                 </button>
               </div>
             </div>
-            {/* Pola Latar Belakang */}
             <div className="absolute top-0 left-0 w-full h-full opacity-10">
               <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-white rounded-full blur-3xl"></div>
               <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-white rounded-full blur-3xl"></div>
@@ -391,10 +544,10 @@ export default function HomePage() {
             <div>
               <h4 className="text-white font-bold mb-6">Tautan Cepat</h4>
               <ul className="space-y-4 text-sm">
-                <li><a href="#" className="hover:text-blue-500">Semua Kursus</a></li>
-                <li><a href="#" className="hover:text-blue-500">Program Bootcamp</a></li>
-                <li><a href="#" className="hover:text-blue-500">Menjadi Instruktur</a></li>
-                <li><a href="#" className="hover:text-blue-500">Berlangganan B2B</a></li>
+                <li><Link href="/courses" className="hover:text-blue-500">Semua Kursus</Link></li>
+                <li><Link href="#" className="hover:text-blue-500">Program Bootcamp</Link></li>
+                <li><Link href="#" className="hover:text-blue-500">Menjadi Instruktur</Link></li>
+                <li><Link href="#" className="hover:text-blue-500">Berlangganan B2B</Link></li>
               </ul>
             </div>
 
@@ -430,7 +583,7 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* Gaya Kustom */}
+      {/* Custom Styles */}
       <style dangerouslySetInnerHTML={{
         __html: `
         @keyframes blob {

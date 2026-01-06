@@ -27,6 +27,7 @@ model User {
   certificates Certificate[]
   payments     Payment[]
   progress     Progress[]
+  contacts     Contact[]
 
   createdAt DateTime @default(now())
 
@@ -260,4 +261,24 @@ model Certificate {
   @@index([courseId])
   @@index([certificateNumber])
   @@index([verificationHash])
+}
+
+model Contact {
+  id      String  @id @default(cuid())
+  name    String
+  email   String
+  phone   String?
+  subject String
+  message String  @db.Text
+  status  String  @default("pending") // pending, resolved
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([userId])
 }

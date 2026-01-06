@@ -65,7 +65,7 @@ export default function LearningClient({
 
             if (res.ok) {
                 // Optimistic update
-                setCurrentLesson(prev => ({ ...prev, completed: true }))
+                setCurrentLesson((prev: any) => ({ ...prev, completed: true }))
 
                 // Auto navigate ke next lesson
                 if (nextLesson && progress < 99) {
@@ -194,8 +194,8 @@ export default function LearningClient({
                                             }
                                         }}
                                         className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-300 font-medium group ${isActive
-                                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-105'
-                                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'
+                                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-105'
+                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -253,8 +253,8 @@ export default function LearningClient({
                         <button
                             onClick={() => setShowNotes(!showNotes)}
                             className={`p-3 rounded-lg transition-all ${showNotes
-                                    ? 'bg-yellow-200 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-200'
-                                    : 'bg-gray-100 hover:bg-gray-200 text-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100'
+                                ? 'bg-yellow-200 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-200'
+                                : 'bg-gray-100 hover:bg-gray-200 text-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100'
                                 }`}
                             title="Catatan (N)"
                         >
@@ -321,10 +321,10 @@ export default function LearningClient({
                                         )}
                                         {currentLesson.difficulty && (
                                             <span className={`px-3 py-1 rounded-full text-sm font-semibold ${currentLesson.difficulty === 'advanced'
-                                                    ? 'bg-red-100/50 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                                                    : currentLesson.difficulty === 'intermediate'
-                                                        ? 'bg-yellow-100/50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
-                                                        : 'bg-green-100/50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                                                ? 'bg-red-100/50 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                                : currentLesson.difficulty === 'intermediate'
+                                                    ? 'bg-yellow-100/50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                                    : 'bg-green-100/50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
                                                 }`}>
                                                 {currentLesson.difficulty === 'advanced' ? '🔴 Advanced' : currentLesson.difficulty === 'intermediate' ? '🟡 Intermediate' : '🟢 Beginner'}
                                             </span>

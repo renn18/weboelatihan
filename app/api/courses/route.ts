@@ -40,17 +40,35 @@ export async function GET(request: NextRequest) {
 
     // Get all published courses
     const courses = await prisma.course.findMany({
-      where: { isPublished: true },
-      include: {
+      where: {
+        isPublished: true,
+      },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        description: true,
+        thumbnail: true,
+        price: true,
+        isPublished: true,
         user: {
           select: {
             name: true,
-            image: true,
+          },
+        },
+        _count: {
+          select: {
+            enrollments: true,
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      take: 10, // Limit to 10 courses
+      orderBy: {
+        createdAt: 'desc',
+      },
     })
+
+    return NextResponse.json(courses)
 
     return NextResponse.json({ success: true, data: courses })
   } catch (error: any) {

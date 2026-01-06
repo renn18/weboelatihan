@@ -58,13 +58,6 @@ export default function CourseModal({ course }: Props) {
           />
 
           <Input
-            name="category"
-            defaultValue={course?.category ?? ''}
-            placeholder="Kategori"
-            required
-          />
-
-          <Input
             name="price"
             type="number"
             defaultValue={course?.price ?? 0}

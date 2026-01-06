@@ -51,16 +51,18 @@ const Header = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                        <div className="bg-blue-600 p-2 rounded-lg">
-                            <BookOpen className="text-white" size={24} />
-                        </div>
-                        <span className="text-xl font-bold tracking-tight">EduFlow</span>
+                        <Link href="/" className="flex items-center gap-2">
+                            <div className="bg-blue-600 p-2 rounded-lg">
+                                <BookOpen className="text-white" size={24} />
+                            </div>
+                            <span className="text-xl font-bold tracking-tight">EduFlow</span>
+                        </Link>
                     </div>
 
                     <div className="hidden md:flex items-center gap-8">
                         <Link href="/" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Beranda</Link>
                         <Link href="/courses" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Kursus</Link>
-                        <Link href="/mentors" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Mentor</Link>
+                        <Link href="/contact" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Kontak</Link>
                         <Link href="/about" className="text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400">Tentang Kami</Link>
 
                         <SignedIn>

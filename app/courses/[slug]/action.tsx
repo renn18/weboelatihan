@@ -5,6 +5,52 @@ import { prisma } from '@/lib/prisma'
 import { createMidtransTransaction } from '@/lib/payment'
 import { revalidatePath } from 'next/cache'
 
+
+/**
+ * Get all published courses (for homepage, courses page)
+ * Returns list of courses with instructor and enrollment count
+ */
+export async function getCourses(options?: { take?: number; skip?: number }) {
+    try {
+        const courses = await prisma.course.findMany({
+            where: {
+                isPublished: true,
+            },
+            select: {
+                id: true,
+                title: true,
+                slug: true,
+                description: true,
+                thumbnail: true,
+                price: true,
+                isPublished: true,
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        image: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        enrollments: true,
+                    },
+                },
+            },
+            take: options?.take ?? 10,
+            skip: options?.skip ?? 0,
+            orderBy: {
+                createdAt: 'desc',
+            },
+        })
+
+        return courses
+    } catch (error: any) {
+        console.error('Error fetching courses:', error.message)
+        throw new Error('Failed to fetch courses')
+    }
+}
+
 export async function enrollAndPay(courseId: string) {
     const { userId: clerkUserId } = await auth()
     if (!clerkUserId) throw new Error('Unauthorized')

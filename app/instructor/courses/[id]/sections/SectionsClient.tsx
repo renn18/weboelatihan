@@ -87,7 +87,7 @@ export default function SectionsClient({ course }: SectionsClientProps) {
 
             if (data.success) {
                 // Update sections state
-                const updatedSections = sections.map(section =>
+                const updatedSections = sections.map((section: any) =>
                     section.id === activeSectionId
                         ? { ...section, lessons: [...section.lessons, data.lesson] }
                         : section
@@ -126,7 +126,7 @@ export default function SectionsClient({ course }: SectionsClientProps) {
             const data = await res.json()
 
             if (data.success) {
-                setSections(sections.filter(s => s.id !== sectionId))
+                setSections(sections.filter((s: any) => s.id !== sectionId))
                 alert('✅ Bagian berhasil dihapus!')
             } else {
                 alert('❌ Error: ' + data.error)
@@ -149,9 +149,9 @@ export default function SectionsClient({ course }: SectionsClientProps) {
             const data = await res.json()
 
             if (data.success) {
-                const updatedSections = sections.map(section =>
+                const updatedSections = sections.map((section: any) =>
                     section.id === sectionId
-                        ? { ...section, lessons: section.lessons.filter(l => l.id !== lessonId) }
+                        ? { ...section, lessons: section.lessons.filter((l: any) => l.id !== lessonId) }
                         : section
                 )
                 setSections(updatedSections)

@@ -8,7 +8,7 @@ interface Course {
     title: string
     slug: string
     description?: string
-    thumbnail?: string
+    thumbnail: string | null
     category: string
     price: number
     user: {

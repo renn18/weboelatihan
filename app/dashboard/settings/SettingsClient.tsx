@@ -26,18 +26,11 @@ interface SettingsClientProps {
 
 export default function SettingsClient({ user }: SettingsClientProps) {
     const router = useRouter()
-    const { user: clerkUser, signOut } = useUser()
+    const { user: clerkUser } = useUser()
     const [activeTab, setActiveTab] = useState<'profile' | 'role' | 'account' | 'security'>('profile')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
-
-    const handleSignOut = async () => {
-        if (confirm('Yakin ingin logout?')) {
-            await signOut()
-            router.push('/')
-        }
-    }
 
     const handleRoleChange = async (newRole: string) => {
         if (newRole === user.role) return
@@ -86,8 +79,8 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
                         className={`px-4 py-3 font-semibold transition-all border-b-2 ${activeTab === tab.id
-                                ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                            ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                            : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                             }`}
                     >
                         {tab.label}
@@ -189,10 +182,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                                 </label>
                                 <div className="px-4 py-3 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg">
                                     <span className={`font-bold ${user.role === 'admin'
-                                            ? 'text-purple-700 dark:text-purple-300'
-                                            : user.role === 'instructor'
-                                                ? 'text-blue-700 dark:text-blue-300'
-                                                : 'text-gray-700 dark:text-gray-300'
+                                        ? 'text-purple-700 dark:text-purple-300'
+                                        : user.role === 'instructor'
+                                            ? 'text-blue-700 dark:text-blue-300'
+                                            : 'text-gray-700 dark:text-gray-300'
                                         }`}>
                                         {user.role === 'admin' ? '👑 Admin' : user.role === 'instructor' ? '🎓 Instructor' : '👤 Student'}
                                     </span>
@@ -255,8 +248,8 @@ export default function SettingsClient({ user }: SettingsClientProps) {
 
                         {/* Student */}
                         <div className={`p-6 rounded-2xl border-2 transition-all cursor-pointer ${user.role === 'user'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-600 dark:border-blue-400'
-                                : 'bg-gray-50 dark:bg-gray-700/30 border-gray-200 dark:border-gray-700 hover:border-blue-400'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-600 dark:border-blue-400'
+                            : 'bg-gray-50 dark:bg-gray-700/30 border-gray-200 dark:border-gray-700 hover:border-blue-400'
                             }`}>
                             <div className="text-4xl mb-4">👤</div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
@@ -269,8 +262,8 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                                 onClick={() => handleRoleChange('user')}
                                 disabled={loading || user.role === 'user'}
                                 className={`w-full py-2 rounded-lg font-semibold transition-all ${user.role === 'user'
-                                        ? 'bg-blue-600 text-white cursor-default'
-                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-blue-600 hover:text-white'
+                                    ? 'bg-blue-600 text-white cursor-default'
+                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-blue-600 hover:text-white'
                                     }`}
                             >
                                 {user.role === 'user' ? '✅ Role Saat Ini' : 'Pilih Role'}
@@ -279,8 +272,8 @@ export default function SettingsClient({ user }: SettingsClientProps) {
 
                         {/* Instructor */}
                         <div className={`p-6 rounded-2xl border-2 transition-all cursor-pointer ${user.role === 'instructor'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-600 dark:border-blue-400'
-                                : 'bg-gray-50 dark:bg-gray-700/30 border-gray-200 dark:border-gray-700 hover:border-blue-400'
+                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-600 dark:border-blue-400'
+                            : 'bg-gray-50 dark:bg-gray-700/30 border-gray-200 dark:border-gray-700 hover:border-blue-400'
                             }`}>
                             <div className="text-4xl mb-4">🎓</div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
@@ -293,8 +286,8 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                                 onClick={() => handleRoleChange('instructor')}
                                 disabled={loading || user.role === 'instructor'}
                                 className={`w-full py-2 rounded-lg font-semibold transition-all ${user.role === 'instructor'
-                                        ? 'bg-blue-600 text-white cursor-default'
-                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-blue-600 hover:text-white'
+                                    ? 'bg-blue-600 text-white cursor-default'
+                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-blue-600 hover:text-white'
                                     }`}
                             >
                                 {user.role === 'instructor' ? '✅ Role Saat Ini' : 'Pilih Role'}
@@ -412,13 +405,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                             Logout dari semua sesi dan keluar
                         </p>
 
-                        <button
-                            onClick={handleSignOut}
-                            className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-                        >
-                            <span>🚪</span>
-                            Logout
-                        </button>
+
                     </div>
 
                     {/* Two-Factor */}

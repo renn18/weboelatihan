@@ -17,7 +17,7 @@ export async function createMidtransTransaction(
   customerEmail: string,
   customerName: string,
   courseTitle: string
-): Promise<{ transactionToken: string; orderId: string }> {
+): Promise<{ transactionToken: string; orderId: string; redirectUrl: string }> {
   if (!MIDTRANS_SERVER_KEY) {
     throw new Error('MIDTRANS_SERVER_KEY not configured in .env.local')
   }
@@ -86,6 +86,7 @@ export async function createMidtransTransaction(
     return {
       transactionToken: result.token,
       orderId,
+      redirectUrl: result.redirect_url,
     }
   } catch (error: any) {
     console.error('💥 createMidtransTransaction error:', error)
