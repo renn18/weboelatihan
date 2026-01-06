@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { Course } from '@/app/generated/prisma'
+import type { Course } from '@prisma/client'
 import { createCourse, updateCourse } from './actions'
 import {
   Dialog,
