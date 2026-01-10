@@ -10,12 +10,15 @@ import {
     Activity,
     AlertCircle,
     CheckCircle2,
-    Clock,
-    ArrowUpRight,
-    ArrowDownRight
+    ArrowUpRight
 } from 'lucide-react'
-import AdminDashboardClient from './DashboardClient'
 import Image from 'next/image'
+import MethodNotAllowedPage from '@/components/MethodNotAllowed'
+
+export const metadata = {
+    title: 'Dashboard - Eduhub',
+    description: 'Kelola pengguna, kursus, dan aktivitas pembelajaran di platform Eduhub',
+}
 
 export default async function AdminDashboard() {
     const { userId: clerkUserId } = await auth()
@@ -28,9 +31,9 @@ export default async function AdminDashboard() {
         where: { clerkId: clerkUserId },
     })
 
-    if (!admin || admin.role !== 'admin') {
-        redirect('/')
-    }
+    // if (!admin || admin.role !== 'admin') {
+    //     return <MethodNotAllowedPage />
+    // }
 
     // Fetch comprehensive statistics
     const totalUsers = await prisma.user.count()
@@ -384,10 +387,10 @@ export default async function AdminDashboard() {
                                         </div>
                                     </div>
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${user.role === 'admin'
-                                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                                            : user.role === 'instructor'
-                                                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                        ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                                        : user.role === 'instructor'
+                                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                                         }`}>
                                         {user.role === 'admin' ? '👑 Admin' : user.role === 'instructor' ? '🎓 Instructor' : '👤 Student'}
                                     </span>
@@ -501,7 +504,7 @@ export default async function AdminDashboard() {
                                             </Link>
                                         </td>
                                         <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                                            {course.user.name}
+                                            {course.user?.name}
                                         </td>
                                         <td className="px-4 py-3 text-sm text-center font-semibold text-gray-900 dark:text-white">
                                             {course._count.enrollments}

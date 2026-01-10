@@ -51,7 +51,7 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
       studentName: certificate.user.name || 'Student',
       studentId: certificate.userId,
       courseName: certificate.course.title,
-      instructorName: certificate.course.user.name || 'Instructor',
+      instructorName: certificate.course.user?.name || 'Instructor',
       certificateNumber: certificate.certificateNumber,
       issuedDate: certificate.issuedAt,
       completionDate: new Date(),

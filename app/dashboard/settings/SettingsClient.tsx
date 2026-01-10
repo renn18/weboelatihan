@@ -126,16 +126,13 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                                     </div>
                                 )}
                                 <div className="space-y-3">
-                                    <p className="text-gray-600 dark:text-gray-400">
+                                    <p className="text-gray-600 dark:text-gray-400 disabled:opacity-70">
                                         Foto profil disinkronkan dari Clerk
                                     </p>
-                                    <Link
-                                        href="/user-profile"
-                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all"
-                                    >
-                                        <span>🔗</span>
-                                        Edit di Clerk
-                                    </Link>
+
+                                    <span>🔗</span>
+                                    Edit di Clerk
+
                                 </div>
                             </div>
                         </div>

@@ -55,7 +55,7 @@ model Course {
 
   // Relations
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   sections     Section[]
   enrollments  Enrollment[]

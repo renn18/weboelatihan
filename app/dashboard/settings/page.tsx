@@ -4,6 +4,11 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import SettingsClient from './SettingsClient'
 
+export const metadata = {
+    title: 'Pengaturan - Eduhub',
+    description: 'Kelola profil dan preferensi Anda di dashboard Eduhub',
+}
+
 export default async function SettingsPage() {
     const { userId: clerkUserId } = await auth()
 

@@ -6,13 +6,9 @@ import {
   Code,
   Layers,
   Layout,
-  Users,
   Star,
   CheckCircle,
   ArrowRight,
-  Search,
-  Menu,
-  X,
   PlayCircle,
   Award,
   TrendingUp,
@@ -23,7 +19,7 @@ import { ButtonHTMLAttributes, ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
 import Header from "@/components/Header";
 import { useRouter } from "next/navigation";
-import { getCourses, getEnrollmentStatus } from "@/app/courses/[slug]/action";
+import { getEnrollmentStatus } from "@/app/courses/[slug]/action";
 import { enrollCourse, enrollAndPay } from "@/app/courses/[slug]/action";
 
 // ✅ Types dari database
@@ -112,6 +108,7 @@ export default function HomePage() {
   const [scrolled, setScrolled] = useState<boolean>(false);
   const [courses, setCourses] = useState<CourseData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
   const [userEnrollments, setUserEnrollments] = useState<Map<string, string>>(new Map());
 
@@ -122,20 +119,53 @@ export default function HomePage() {
     const loadCourses = async () => {
       try {
         setLoading(true);
-        // Server action untuk get all published courses
-        const response = await fetch('/api/courses', {
+        setError(null);
+
+        // ✅ PERBAIKAN: Gunakan env variable dan tambah error handling
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+        if (!baseUrl) {
+          throw new Error('NEXT_PUBLIC_APP_URL is not defined');
+        }
+
+        const response = await fetch(`${baseUrl}/api/courses`, {
           method: 'GET',
-          cache: 'no-store'
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+          },
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setCourses(data.slice(0, 3)); // Ambil 3 teratas
+        // ✅ Cek HTTP status
+        if (!response.ok) {
+          throw new Error(`Failed to fetch courses: ${response.status} ${response.statusText}`);
         }
+
+        const data = await response.json();
+
+        // ✅ Validasi response structure
+        if (!Array.isArray(data.data) && !Array.isArray(data)) {
+          throw new Error('Invalid response structure from API');
+        }
+
+        const allCourses = Array.isArray(data.data) ? data.data : data;
+
+        // ✅ Filter hanya published courses dan ambil 3 teratas
+        const publishedCourses = allCourses
+          .filter((course: CourseData) => course.isPublished === true)
+          .slice(0, 3);
+
+        if (publishedCourses.length === 0) {
+          setError('Belum ada kursus yang dipublikasikan.');
+          setCourses([]);
+          return;
+        }
+
+        setCourses(publishedCourses);
       } catch (error) {
-        console.error('Error loading courses:', error);
-        // Fallback ke dummy data jika API error
-        setCourses(mockCourses);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        console.error('❌ Error loading courses:', errorMessage);
+        setError(errorMessage);
+        setCourses([]); // ✅ Jangan gunakan fallback, set kosong
       } finally {
         setLoading(false);
       }
@@ -147,6 +177,8 @@ export default function HomePage() {
   // ✅ Check enrollment status saat component mount
   useEffect(() => {
     const checkEnrollments = async () => {
+      if (courses.length === 0) return;
+
       for (const course of courses) {
         try {
           const status = await getEnrollmentStatus(course.id);
@@ -159,9 +191,7 @@ export default function HomePage() {
       }
     };
 
-    if (courses.length > 0) {
-      checkEnrollments();
-    }
+    checkEnrollments();
   }, [courses]);
 
   const handleEnroll = async (courseId: string, price: number) => {
@@ -172,7 +202,7 @@ export default function HomePage() {
         // ✅ Enroll di kursus gratis
         const result = await enrollCourse(courseId);
         if (result) {
-          alert('Berhasil didaftarkan! Akses kursus di dashboard Anda.');
+          alert('✅ Berhasil didaftarkan! Akses kursus di dashboard Anda.');
           setUserEnrollments(prev => new Map(prev).set(courseId, 'enrolled'));
           router.refresh();
         }
@@ -180,16 +210,17 @@ export default function HomePage() {
         // ✅ Enroll di kursus berbayar - buka pembayaran
         const result = await enrollAndPay(courseId);
         if (result) {
-          // Open Midtrans Snap
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if ((window as any).snap && 'transactionToken' in result) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (window as any).snap.pay(result.transactionToken, {
               onSuccess: () => {
-                alert('Pembayaran berhasil! Akses kursus sekarang.');
+                alert('✅ Pembayaran berhasil! Akses kursus sekarang.');
                 setUserEnrollments(prev => new Map(prev).set(courseId, 'enrolled'));
                 router.refresh();
               },
               onError: () => {
-                alert('Pembayaran gagal. Silakan coba lagi.');
+                alert('❌ Pembayaran gagal. Silakan coba lagi.');
               },
             });
           } else if ('redirectUrl' in result) {
@@ -197,8 +228,10 @@ export default function HomePage() {
           }
         }
       }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      alert(error.message || 'Terjadi kesalahan');
+      alert('❌ ' + (error.message || 'Terjadi kesalahan saat mendaftar'));
     } finally {
       setEnrollingCourseId(null);
     }
@@ -215,43 +248,6 @@ export default function HomePage() {
     { name: 'Desain UI/UX', icon: <Layout size={24} />, count: '85+ Kursus', color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400' },
     { name: 'Data Science', icon: <Layers size={24} />, count: '64+ Kursus', color: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' },
     { name: 'Pemasaran Digital', icon: <TrendingUp size={24} />, count: '92+ Kursus', color: 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400' },
-  ];
-
-  // ✅ Mock data (fallback)
-  const mockCourses: CourseData[] = [
-    {
-      id: '1',
-      title: "Mastering React & Next.js 15",
-      slug: "mastering-react-next",
-      description: "Pelajari React dan Next.js secara mendalam",
-      thumbnail: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=800&q=80",
-      price: 499000,
-      isPublished: true,
-      user: { name: "Alex Chandra" },
-      _count: { enrollments: 12400 }
-    },
-    {
-      id: '2',
-      title: "UI Design dengan Figma: Pro Level",
-      slug: "ui-design-figma",
-      description: "Desain UI profesional menggunakan Figma",
-      thumbnail: "https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?auto=format&fit=crop&w=800&q=80",
-      price: 350000,
-      isPublished: true,
-      user: { name: "Siska Amelia" },
-      _count: { enrollments: 8200 }
-    },
-    {
-      id: '3',
-      title: "Analisis Data dengan Python",
-      slug: "analisis-data-python",
-      description: "Data analysis dan visualization dengan Python",
-      thumbnail: "https://images.unsplash.com/photo-1551288049-bbbda536639a?auto=format&fit=crop&w=800&q=80",
-      price: 425000,
-      isPublished: true,
-      user: { name: "Budi Santoso" },
-      _count: { enrollments: 5600 }
-    }
   ];
 
   return (
@@ -362,7 +358,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Courses Section - ✅ DARI DATABASE */}
+      {/* Featured Courses Section - ✅ 100% DARI DATABASE */}
       <section className="py-24 bg-gray-50 dark:bg-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -370,13 +366,39 @@ export default function HomePage() {
             <p className="text-gray-600 dark:text-gray-400">Investasi terbaik adalah investasi pada dirimu sendiri.</p>
           </div>
 
+          {/* ✅ Loading State */}
           {loading ? (
             <div className="flex justify-center items-center py-20">
-              <Loader size={40} className="animate-spin text-blue-600" />
+              <div className="flex flex-col items-center gap-4">
+                <Loader size={40} className="animate-spin text-blue-600" />
+                <p className="text-gray-600 dark:text-gray-400">Memuat kursus...</p>
+              </div>
+            </div>
+          ) : error ? (
+            // ✅ Error State - tanpa fallback dummy data
+            <div className="flex justify-center items-center py-20">
+              <div className="text-center max-w-md">
+                <div className="text-6xl mb-4">⚠️</div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Terjadi Kesalahan</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+                <Button onClick={() => window.location.reload()} className="mx-auto">
+                  Coba Lagi
+                </Button>
+              </div>
+            </div>
+          ) : courses.length === 0 ? (
+            // ✅ Empty State - tidak ada kursus published
+            <div className="flex justify-center items-center py-20">
+              <div className="text-center max-w-md">
+                <div className="text-6xl mb-4">📚</div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Belum Ada Kursus</h3>
+                <p className="text-gray-600 dark:text-gray-400">Kursus akan segera tersedia. Silakan kembali nanti.</p>
+              </div>
             </div>
           ) : (
+            // ✅ Display Courses dari Database
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {(courses.length > 0 ? courses : mockCourses).map((course) => {
+              {courses.map((course) => {
                 const enrollmentStatus = userEnrollments.get(course.id);
                 const isEnrolling = enrollingCourseId === course.id;
                 const formattedPrice = new Intl.NumberFormat('id-ID', {
@@ -412,7 +434,7 @@ export default function HomePage() {
                         {course.title}
                       </h3>
                       <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Oleh {course.user?.name || 'Instruktur'}</p>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{course.description}</p>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{course.description || 'Deskripsi tidak tersedia'}</p>
                       <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
                         <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
                           {course.price === 0 ? 'Gratis' : formattedPrice}

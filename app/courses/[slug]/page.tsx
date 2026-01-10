@@ -183,7 +183,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
                         {/* Instructor */}
                         <div className="flex items-center gap-4 p-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
-                            {course.user.image && (
+                            {course.user?.image && (
                                 <Image
                                     src={course.user.image}
                                     alt={course.user.name || 'Instructor'}
@@ -195,7 +195,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
                             <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Diajarkan oleh</p>
                                 <p className="text-lg font-bold text-gray-900 dark:text-white">
-                                    {course.user.name || 'Instruktur'}
+                                    {course.user?.name || 'Instruktur'}
                                 </p>
                             </div>
                         </div>

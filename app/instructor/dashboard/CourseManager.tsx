@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Course } from '@/lib/types/course'  // ✅ IMPORT
+import Image from 'next/image'
 
 interface CourseManagerProps {
     courses: Course[]
@@ -102,8 +103,8 @@ export default function CourseManager({ courses }: CourseManagerProps) {
                             key={status}
                             onClick={() => setFilter(status as 'all' | 'published' | 'draft')}
                             className={`px-6 py-2 rounded-2xl font-semibold transition-all capitalize ${filter === status
-                                    ? 'bg-blue-600 text-white shadow-lg'
-                                    : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                                ? 'bg-blue-600 text-white shadow-lg'
+                                : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                                 }`}
                         >
                             {status}
@@ -176,7 +177,9 @@ export default function CourseManager({ courses }: CourseManagerProps) {
                                     <td className="py-6 px-6">
                                         <div className="flex items-center gap-4">
                                             {course.thumbnail ? (
-                                                <img
+                                                <Image
+                                                    width={48}
+                                                    height={48}
                                                     src={course.thumbnail}
                                                     alt={course.title}
                                                     className="w-12 h-12 rounded-lg object-cover"
@@ -228,8 +231,8 @@ export default function CourseManager({ courses }: CourseManagerProps) {
                                     <td className="py-6 px-6 text-center">
                                         <span
                                             className={`px-4 py-2 rounded-full font-semibold text-sm inline-block ${course.isPublished
-                                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
-                                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
                                                 }`}
                                         >
                                             {course.isPublished ? '✅ Published' : '📝 Draft'}
@@ -259,8 +262,8 @@ export default function CourseManager({ courses }: CourseManagerProps) {
                                                 }
                                                 disabled={loading === course.id}
                                                 className={`inline-flex items-center gap-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${course.isPublished
-                                                        ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                                                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                                    ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                                                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                                                     }`}
                                             >
                                                 {loading === course.id ? (

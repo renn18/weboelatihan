@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Web Pelatihan",
-  description: "Dashboard Pelatihan",
+  title: "Eduhub",
+  description: "Platform Pelatihan Online Terbaik untuk Semua",
 }
 
 export default function RootLayout({

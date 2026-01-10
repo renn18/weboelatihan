@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface CreateCourseClientProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     course?: any
     userId: string
 }
@@ -74,13 +76,20 @@ export default function CreateCourseClient({ course, userId }: CreateCourseClien
 
             const data = await res.json()
 
+            console.log(data)
+
             if (data.success) {
                 alert(course ? '✅ Kursus berhasil diperbarui!' : '✅ Kursus berhasil dibuat!')
 
                 // Navigate ke sections page
                 const courseId = data.course?.id || course?.id
                 router.push(`/instructor/courses/${courseId}/sections`)
-            } else {
+            } else if (res.status === 200) {
+                alert('✅ Kursus berhasil disimpan!')
+                router.push('/instructor/dashboard')
+            }
+
+            else {
                 alert('❌ Error: ' + (data.error || 'Gagal menyimpan kursus'))
             }
         } catch (error) {
@@ -108,8 +117,8 @@ export default function CreateCourseClient({ course, userId }: CreateCourseClien
                         value={form.title}
                         onChange={(e) => handleTitleChange(e.target.value)}
                         className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors text-lg dark:bg-gray-700 dark:text-white ${errors.title
-                                ? 'border-red-500 focus:border-red-600'
-                                : 'border-gray-200 dark:border-gray-600 focus:border-blue-500'
+                            ? 'border-red-500 focus:border-red-600'
+                            : 'border-gray-200 dark:border-gray-600 focus:border-blue-500'
                             }`}
                     />
                     {errors.title && (
@@ -132,8 +141,8 @@ export default function CreateCourseClient({ course, userId }: CreateCourseClien
                             value={form.slug}
                             onChange={(e) => setForm({ ...form, slug: e.target.value })}
                             className={`flex-1 px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors dark:bg-gray-700 dark:text-white ${errors.slug
-                                    ? 'border-red-500 focus:border-red-600'
-                                    : 'border-gray-200 dark:border-gray-600 focus:border-blue-500'
+                                ? 'border-red-500 focus:border-red-600'
+                                : 'border-gray-200 dark:border-gray-600 focus:border-blue-500'
                                 }`}
                         />
                     </div>
@@ -152,8 +161,8 @@ export default function CreateCourseClient({ course, userId }: CreateCourseClien
                         value={form.description}
                         onChange={(e) => setForm({ ...form, description: e.target.value })}
                         className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors resize-none h-32 dark:bg-gray-700 dark:text-white ${errors.description
-                                ? 'border-red-500 focus:border-red-600'
-                                : 'border-gray-200 dark:border-gray-600 focus:border-blue-500'
+                            ? 'border-red-500 focus:border-red-600'
+                            : 'border-gray-200 dark:border-gray-600 focus:border-blue-500'
                             }`}
                     />
                     {errors.description && (
@@ -170,8 +179,8 @@ export default function CreateCourseClient({ course, userId }: CreateCourseClien
                         value={form.category}
                         onChange={(e) => setForm({ ...form, category: e.target.value })}
                         className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors dark:bg-gray-700 dark:text-white ${errors.category
-                                ? 'border-red-500 focus:border-red-600'
-                                : 'border-gray-200 dark:border-gray-600 focus:border-blue-500'
+                            ? 'border-red-500 focus:border-red-600'
+                            : 'border-gray-200 dark:border-gray-600 focus:border-blue-500'
                             }`}
                     >
                         <option value="">Pilih Kategori</option>
@@ -199,8 +208,8 @@ export default function CreateCourseClient({ course, userId }: CreateCourseClien
                             value={form.price}
                             onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
                             className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors dark:bg-gray-700 dark:text-white ${errors.price
-                                    ? 'border-red-500 focus:border-red-600'
-                                    : 'border-gray-200 dark:border-gray-600 focus:border-blue-500'
+                                ? 'border-red-500 focus:border-red-600'
+                                : 'border-gray-200 dark:border-gray-600 focus:border-blue-500'
                                 }`}
                         />
                         {errors.price && (
@@ -236,7 +245,9 @@ export default function CreateCourseClient({ course, userId }: CreateCourseClien
                             📸 Preview Thumbnail
                         </p>
                         <div className="relative w-full h-48 bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-600">
-                            <img
+                            <Image
+                                width={200}
+                                height={300}
                                 src={form.thumbnail}
                                 alt="Thumbnail preview"
                                 className="w-full h-full object-cover"

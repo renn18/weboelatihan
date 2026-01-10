@@ -35,7 +35,7 @@ export async function createCourse(formData: FormData) {
       description,
       price,
       category,
-      userId: dbUser.id, 
+      userId: dbUser.id,
     },
   })
 

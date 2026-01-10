@@ -19,7 +19,7 @@ export async function PUT(request: NextRequest, { params }: RouteProps) {
       where: { clerkId: clerkUserId },
     })
 
-    if (!dbUser || dbUser.role !== 'instructor') {
+    if (!dbUser || dbUser.role == 'user') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -70,6 +70,7 @@ export async function PUT(request: NextRequest, { params }: RouteProps) {
     console.log('✅ Course updated:', updatedCourse.id)
 
     return NextResponse.json({ success: true, course: updatedCourse })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('❌ Course update error:', error.message)
     return NextResponse.json(
@@ -92,8 +93,8 @@ export async function DELETE(request: NextRequest, { params }: RouteProps) {
       where: { clerkId: clerkUserId },
     })
 
-    if (!dbUser || dbUser.role !== 'instructor') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!dbUser || dbUser.role == 'user') {
+      return NextResponse.json({ error: 'Akses terlarang, hanya admin dan instruktur' }, { status: 403 })
     }
 
     const course = await prisma.course.findUnique({
@@ -111,6 +112,8 @@ export async function DELETE(request: NextRequest, { params }: RouteProps) {
     console.log('✅ Course deleted:', courseId)
 
     return NextResponse.json({ success: true })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('❌ Course delete error:', error.message)
     return NextResponse.json(

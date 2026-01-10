@@ -25,13 +25,39 @@ interface Course {
 
 async function getCourses(): Promise<Course[]> {
     try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/courses`, {
+        // ✅ PERBAIKAN 1: Validasi NEXT_PUBLIC_APP_URL
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+        if (!baseUrl) {
+            console.error('⚠️ NEXT_PUBLIC_APP_URL is not defined in .env.local')
+            return []
+        }
+
+        const res = await fetch(`${baseUrl}/api/courses`, {
             next: { revalidate: 60 },
+            // ✅ PERBAIKAN 2: Tambah timeout dan headers
+            headers: {
+                'Content-Type': 'application/json',
+            },
         })
+
+        // ✅ PERBAIKAN 3: Cek HTTP status terlebih dahulu
+        if (!res.ok) {
+            console.error(`❌ Failed to fetch courses: ${res.status} ${res.statusText}`)
+            return []
+        }
+
         const data = await res.json()
-        return data.data || []
+
+        // ✅ PERBAIKAN 4: Validasi response structure
+        if (!Array.isArray(data.data) && !Array.isArray(data)) {
+            console.error('❌ Invalid response structure:', data)
+            return []
+        }
+
+        const courses = Array.isArray(data.data) ? data.data : data
+        return courses || []
     } catch (error) {
-        console.error('Error fetching courses:', error)
+        console.error('❌ Error fetching courses:', error instanceof Error ? error.message : error)
         return []
     }
 }
@@ -46,11 +72,14 @@ export default async function CoursesPage({
     const searchQuery = params?.search || ''
     const selectedCategory = params?.category || 'all'
 
-    // Get unique categories
-    const categories = ['all', ...new Set(courses.map(c => c.category).filter(Boolean))]
+    // ✅ PERBAIKAN 5: Filter hanya published courses
+    const publishedCourses = courses.filter(course => course.isPublished === true)
+
+    // Get unique categories dari published courses
+    const categories = ['all', ...new Set(publishedCourses.map(c => c.category).filter(Boolean))]
 
     // Filter courses
-    const filteredCourses = courses.filter(course => {
+    const filteredCourses = publishedCourses.filter(course => {
         const matchesSearch =
             course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             course.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -61,6 +90,7 @@ export default async function CoursesPage({
         return matchesSearch && matchesCategory
     })
 
+    // ✅ PERBAIKAN 6: Cek apakah courses berhasil diambil
     if (!courses || courses.length === 0) {
         return (
             <>
@@ -72,7 +102,10 @@ export default async function CoursesPage({
                             Belum Ada Kursus
                         </h1>
                         <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
-                            Kursus akan segera tersedia. Silahkan kembali nanti
+                            Kursus akan segera tersedia. Silahkan refresh page
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-500">
+                            💡 Pastikan NEXT_PUBLIC_APP_URL sudah di-set di .env.local
                         </p>
                     </div>
                 </div>
@@ -85,7 +118,6 @@ export default async function CoursesPage({
             <Header />
             <section className="pt-32 lg:pt-30 overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-950 min-h-screen pb-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
                     {/* Header */}
                     <div className="mb-12">
                         <h1 className="text-5xl font-black bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-gray-100 dark:via-blue-100 dark:to-indigo-100 bg-clip-text text-transparent mb-4">
@@ -97,14 +129,14 @@ export default async function CoursesPage({
                     </div>
 
                     {/* Search & Filter Component */}
-                    <CoursesFilter categories={categories} courses={courses} />
+                    <CoursesFilter categories={categories} courses={publishedCourses} />
 
                     {/* Results Count */}
                     <div className="mb-8">
                         <p className="text-lg font-semibold text-gray-600 dark:text-gray-300">
                             {filteredCourses.length === 0
                                 ? '❌ Tidak ada kursus yang sesuai'
-                                : `✅ Menampilkan ${filteredCourses.length} kursus`}
+                                : `✅ Menampilkan ${filteredCourses.length} dari ${publishedCourses.length} kursus`}
                         </p>
                     </div>
 

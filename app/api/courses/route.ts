@@ -75,6 +75,9 @@ export async function GET(request: NextRequest) {
       'Cache-Control',
       'public, s-maxage=60, stale-while-revalidate=120'
     )
+
+    return response
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('❌ Get courses error:', error)
     return NextResponse.json(
@@ -110,7 +113,7 @@ export async function POST(req: NextRequest) {
 
     // ✅ Validate input
     const body = await req.json()
-    const { title, slug, description, price, category } = body
+    const { title, slug, description, price, category, thumbnail } = body
 
     if (!title || !slug) {
       return NextResponse.json(
@@ -134,6 +137,7 @@ export async function POST(req: NextRequest) {
         title,
         category,
         slug,
+        thumbnail: thumbnail || null,
         description: description || '',
         price: price || 0,
         userId: user.id,
@@ -148,12 +152,16 @@ export async function POST(req: NextRequest) {
         createdAt: true,
       },
     })
+
 // ✅ Cache response untuk 60 detik
     const response = NextResponse.json(course)
     response.headers.set(
       'Cache-Control',
       'public, s-maxage=60, stale-while-revalidate=120'
     )
+
+    return response
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || 'Failed to create course' },

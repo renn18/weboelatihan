@@ -1,6 +1,11 @@
 import { prisma } from '@/lib/prisma'
 import CoursesClient from './CourseClient'
 
+export const metadata = {
+    title: 'Kursus - Eduhub',
+    description: 'Jelajahi dan kelola kursus yang tersedia di platform Eduhub',
+}
+
 export default async function Page({
     searchParams,
 }: {
