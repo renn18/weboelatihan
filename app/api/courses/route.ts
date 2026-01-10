@@ -69,7 +69,12 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ success: true, data: courses })
+   // ✅ Cache response untuk 60 detik
+    const response = NextResponse.json(courses)
+    response.headers.set(
+      'Cache-Control',
+      'public, s-maxage=60, stale-while-revalidate=120'
+    )
   } catch (error: any) {
     console.error('❌ Get courses error:', error)
     return NextResponse.json(
@@ -143,8 +148,12 @@ export async function POST(req: NextRequest) {
         createdAt: true,
       },
     })
-
-    return NextResponse.json(course, { status: 201 })
+// ✅ Cache response untuk 60 detik
+    const response = NextResponse.json(course)
+    response.headers.set(
+      'Cache-Control',
+      'public, s-maxage=60, stale-while-revalidate=120'
+    )
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || 'Failed to create course' },

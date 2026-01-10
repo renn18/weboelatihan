@@ -3,6 +3,12 @@ import CourseCard from '@/components/CourseCard'
 import CoursesFilter from '@/components/CoursesFilter'
 import Link from 'next/link'
 
+export const revalidate = 60
+export const metadata = {
+    title: 'Courses - EduFlow',
+    description: 'Explore our online courses',
+}
+
 interface Course {
     id: string
     title: string
@@ -20,7 +26,7 @@ interface Course {
 async function getCourses(): Promise<Course[]> {
     try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/courses`, {
-            cache: 'no-store',
+            next: { revalidate: 60 },
         })
         const data = await res.json()
         return data.data || []
