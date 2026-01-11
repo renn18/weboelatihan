@@ -164,7 +164,7 @@ export default async function AdminDashboard() {
                                 👑 Admin Dashboard
                             </h1>
                             <p className="text-gray-600 dark:text-gray-400 mt-2">
-                                Selamat datang, {admin.name || 'Admin'}
+                                Selamat datang, {admin?.name || 'Admin'}
                             </p>
                         </div>
                         <div className="hidden md:flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800/50">
