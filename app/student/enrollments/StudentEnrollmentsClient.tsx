@@ -297,7 +297,7 @@ export default function StudentEnrollmentsClient({
                                 {/* Main Actions */}
                                 <div className="flex gap-2 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
                                     <Link
-                                        href={`/courses/${enrollment.course.slug}/learn`}
+                                        href={`/learn/${enrollment.course.slug}`}
                                         className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-all text-center"
                                     >
                                         📖 Belajar
