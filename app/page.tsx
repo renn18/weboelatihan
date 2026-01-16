@@ -13,7 +13,9 @@ import {
   Award,
   TrendingUp,
   Globe,
-  Loader
+  Loader,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { ButtonHTMLAttributes, ReactNode, useEffect, useState } from "react";
 import Image from "next/image";
@@ -22,7 +24,7 @@ import { useRouter } from "next/navigation";
 import { getEnrollmentStatus } from "@/app/courses/[slug]/action";
 import { enrollCourse, enrollAndPay } from "@/app/courses/[slug]/action";
 
-// ✅ Types dari database
+// ✅ Types
 interface CourseData {
   id: string;
   title: string;
@@ -39,6 +41,21 @@ interface CourseData {
   };
 }
 
+interface ApiResponse<T> {
+  success: boolean;
+  data: T[];
+  message?: string;
+  timestamp?: string;
+}
+
+interface StatisticsData {
+  instructors: number;
+  videos: number;
+  enrollments: number;
+  partners: number;
+  rating: string;
+}
+
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
@@ -46,6 +63,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
 }
 
+// ✅ Button Component
 const Button: React.FC<ButtonProps> = ({
   children,
   variant = 'primary',
@@ -74,35 +92,73 @@ const Button: React.FC<ButtonProps> = ({
   );
 };
 
-interface BadgeProps {
-  children: ReactNode;
-  className?: string;
-}
-
-const Badge: React.FC<BadgeProps> = ({ children, className = "" }) => (
+// ✅ Badge Component
+const Badge: React.FC<{ children: ReactNode; className?: string }> = ({ children, className = "" }) => (
   <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 ${className}`}>
     {children}
   </span>
 );
 
-interface CardProps {
-  children: ReactNode;
-  className?: string;
-}
-
-const Card: React.FC<CardProps> = ({ children, className = "" }) => (
+// ✅ Card Component
+const Card: React.FC<{ children: ReactNode; className?: string }> = ({ children, className = "" }) => (
   <div className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-300 ${className}`}>
     {children}
   </div>
 );
 
-interface Category {
-  name: string;
-  icon: ReactNode;
-  count: string;
-  color: string;
-}
+// ✅ IMPROVED: Fetch dengan timeout dan retry logic
+const fetchCoursesWithRetry = async (baseUrl: string, maxRetries: number = 3): Promise<ApiResponse<CourseData>> => {
+  let lastError: Error | null = null;
 
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+      const response = await fetch(`${baseUrl}/api/courses`, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Validasi response structure
+      if (!Array.isArray(data?.data) && !Array.isArray(data)) {
+        throw new Error('Invalid response structure from API');
+      }
+
+      return {
+        success: true,
+        data: Array.isArray(data?.data) ? data.data : data,
+        timestamp: new Date().toISOString()
+      };
+
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('Unknown error');
+
+      if (attempt < maxRetries) {
+        // Exponential backoff
+        const delay = Math.pow(2, attempt - 1) * 1000;
+        console.warn(`⚠️ Attempt ${attempt} failed. Retrying in ${delay}ms...`, lastError.message);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error('Failed to fetch courses after multiple attempts');
+};
+
+// ✅ Main Component
 export default function HomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
@@ -111,82 +167,87 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [enrollingCourseId, setEnrollingCourseId] = useState<string | null>(null);
   const [userEnrollments, setUserEnrollments] = useState<Map<string, string>>(new Map());
+  const [statistics, setStatistics] = useState<StatisticsData | null>(null);
+  const [statsLoading, setStatsLoading] = useState<boolean>(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   const router = useRouter();
 
-  // ✅ Load courses dari database
-  useEffect(() => {
-    const loadCourses = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  // ✅ IMPROVED: Load courses dengan retry logic
+  const loadCourses = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        // ✅ PERBAIKAN: Gunakan env variable dan tambah error handling
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-        if (!baseUrl) {
-          throw new Error('NEXT_PUBLIC_APP_URL is not defined');
-        }
-
-        const response = await fetch(`${baseUrl}/api/courses`, {
-          method: 'GET',
-          cache: 'no-store',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        // ✅ Cek HTTP status
-        if (!response.ok) {
-          throw new Error(`Failed to fetch courses: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        // ✅ Validasi response structure
-        if (!Array.isArray(data.data) && !Array.isArray(data)) {
-          throw new Error('Invalid response structure from API');
-        }
-
-        const allCourses = Array.isArray(data.data) ? data.data : data;
-
-        // ✅ Filter hanya published courses dan ambil 3 teratas
-        const publishedCourses = allCourses
-          .filter((course: CourseData) => course.isPublished === true)
-          .slice(0, 3);
-
-        if (publishedCourses.length === 0) {
-          setError('Belum ada kursus yang dipublikasikan.');
-          setCourses([]);
-          return;
-        }
-
-        setCourses(publishedCourses);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        console.error('❌ Error loading courses:', errorMessage);
-        setError(errorMessage);
-        setCourses([]); // ✅ Jangan gunakan fallback, set kosong
-      } finally {
-        setLoading(false);
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+      if (!baseUrl) {
+        throw new Error('NEXT_PUBLIC_APP_URL is not defined in environment');
       }
-    };
 
+      console.log('🔄 Fetching courses from:', `${baseUrl}/api/courses`);
+
+      const response = await fetchCoursesWithRetry(baseUrl);
+
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to fetch courses');
+      }
+
+      const allCourses = response.data;
+      console.log(`📚 Received ${allCourses.length} total courses from API`);
+
+      // ✅ IMPROVED: Filter dan sort berdasarkan enrollment count
+      const publishedCourses = allCourses
+        .filter((course: CourseData) => course.isPublished === true)
+        .sort((a, b) => (b._count?.enrollments || 0) - (a._count?.enrollments || 0)) // Sort by popularity
+        .slice(0, 3);
+
+      if (publishedCourses.length === 0) {
+        setError('Belum ada kursus yang dipublikasikan.');
+        setCourses([]);
+        console.warn('⚠️ No published courses found');
+        return;
+      }
+
+      console.log(`✅ Loaded ${publishedCourses.length} published courses`);
+
+      // Log course details untuk debugging
+      publishedCourses.forEach(course => {
+        console.log(`  - ${course.title} (Rp${course.price.toLocaleString('id-ID')}) - ${course._count?.enrollments || 0} students`);
+      });
+
+      setCourses(publishedCourses);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('❌ Error loading courses:', errorMessage);
+      setError(errorMessage);
+      setCourses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Load courses pada mount
+  useEffect(() => {
     loadCourses();
   }, []);
 
-  // ✅ Check enrollment status saat component mount
+  // ✅ Check enrollment status
   useEffect(() => {
     const checkEnrollments = async () => {
       if (courses.length === 0) return;
+
+      console.log('🔍 Checking enrollment status for', courses.length, 'courses...');
 
       for (const course of courses) {
         try {
           const status = await getEnrollmentStatus(course.id);
           if (status) {
             setUserEnrollments(prev => new Map(prev).set(course.id, status));
+            console.log(`  ✓ Course ${course.id} status: ${status}`);
           }
         } catch (error) {
-          console.error(`Error checking enrollment for ${course.id}:`, error);
+          console.error(`❌ Error checking enrollment for ${course.id}:`, error);
         }
       }
     };
@@ -194,12 +255,63 @@ export default function HomePage() {
     checkEnrollments();
   }, [courses]);
 
+  useEffect(() => {
+    const loadStatistics = async () => {
+      try {
+        setStatsLoading(true);
+        setStatsError(null);
+
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+        if (!baseUrl) {
+          throw new Error('NEXT_PUBLIC_APP_URL is not defined');
+        }
+
+        console.log('📊 Fetching statistics from API...');
+
+        const response = await fetch(`${baseUrl}/api/statistics`, {
+          method: 'GET',
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch statistics: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          console.log('✅ Statistics loaded:', data.data);
+          setStatistics(data.data);
+        } else {
+          throw new Error('Invalid statistics response');
+        }
+
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('❌ Error loading statistics:', errorMessage);
+        setStatsError(errorMessage);
+
+        // ✅ Fallback dengan default values jika perlu
+        // Tapi lebih baik show error daripada dummy data
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    loadStatistics();
+  }, []);
+
+  // ✅ Handle enrollment
   const handleEnroll = async (courseId: string, price: number) => {
     try {
       setEnrollingCourseId(courseId);
+      console.log(`📝 Enrolling course ${courseId}...`);
 
       if (price === 0) {
-        // ✅ Enroll di kursus gratis
+        // ✅ Free course
         const result = await enrollCourse(courseId);
         if (result) {
           alert('✅ Berhasil didaftarkan! Akses kursus di dashboard Anda.');
@@ -207,7 +319,7 @@ export default function HomePage() {
           router.refresh();
         }
       } else {
-        // ✅ Enroll di kursus berbayar - buka pembayaran
+        // ✅ Paid course
         const result = await enrollAndPay(courseId);
         if (result) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -232,18 +344,21 @@ export default function HomePage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       alert('❌ ' + (error.message || 'Terjadi kesalahan saat mendaftar'));
+      console.error('Enrollment error:', error);
     } finally {
       setEnrollingCourseId(null);
     }
   };
 
+  // ✅ Scroll detection
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const categories: Category[] = [
+  // Categories data (tetap static, tidak dari DB)
+  const categories = [
     { name: 'Pengembangan Web', icon: <Code size={24} />, count: '120+ Kursus', color: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' },
     { name: 'Desain UI/UX', icon: <Layout size={24} />, count: '85+ Kursus', color: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400' },
     { name: 'Data Science', icon: <Layers size={24} />, count: '64+ Kursus', color: 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' },
@@ -253,10 +368,9 @@ export default function HomePage() {
   return (
     <>
       <Header />
-
-      {/* Midtrans Script */}
       <script src="https://app.sandbox.midtrans.com/snap/snap.js" async></script>
 
+      {/* Hero Section */}
       <section className="pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center gap-12">
@@ -276,7 +390,7 @@ export default function HomePage() {
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4].map(i => (
                     <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                      <Image width={500} height={500} src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="User" />
+                      <Image width={32} height={32} src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="User" />
                     </div>
                   ))}
                 </div>
@@ -313,24 +427,57 @@ export default function HomePage() {
       {/* Statistics Section */}
       <section className="py-12 bg-gray-50 dark:bg-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">500+</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Instruktur Ahli</p>
+          {statsLoading ? (
+            // Loading state
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mx-auto mb-2"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/2 mx-auto"></div>
+                </div>
+              ))}
             </div>
-            <div>
-              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">20K+</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Video Materi</p>
+          ) : statsError ? (
+            // Error state - still show fallback atau message
+            <div className="text-center text-gray-600 dark:text-gray-400">
+              <p className="mb-4">Gagal memuat statistik</p>
+              <Button
+                onClick={() => window.location.reload()}
+                variant="outline"
+                className="mx-auto"
+              >
+                Muat Ulang
+              </Button>
             </div>
-            <div>
-              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">95%</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Kepuasan Siswa</p>
+          ) : statistics ? (
+            // Display real statistics dari database
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              <div>
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                  {statistics.instructors}+
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Instruktur Ahli</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                  {statistics.videos}+
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Video Materi</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                  {statistics.enrollments}+
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Enrollment</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                  {statistics.partners}+
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Mitra Perusahaan</p>
+              </div>
             </div>
-            <div>
-              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">100+</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Mitra Perusahaan</p>
-            </div>
-          </div>
+          ) : null}
         </div>
       </section>
 
@@ -358,7 +505,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Courses Section - ✅ 100% DARI DATABASE */}
+      {/* Featured Courses Section - 100% REAL DATA */}
       <section className="py-24 bg-gray-50 dark:bg-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -366,7 +513,7 @@ export default function HomePage() {
             <p className="text-gray-600 dark:text-gray-400">Investasi terbaik adalah investasi pada dirimu sendiri.</p>
           </div>
 
-          {/* ✅ Loading State */}
+          {/* Loading State */}
           {loading ? (
             <div className="flex justify-center items-center py-20">
               <div className="flex flex-col items-center gap-4">
@@ -375,19 +522,24 @@ export default function HomePage() {
               </div>
             </div>
           ) : error ? (
-            // ✅ Error State - tanpa fallback dummy data
+            // Error State
             <div className="flex justify-center items-center py-20">
-              <div className="text-center max-w-md">
-                <div className="text-6xl mb-4">⚠️</div>
+              <div className="text-center max-w-md bg-red-50 dark:bg-red-900/20 p-8 rounded-xl border border-red-200 dark:border-red-800">
+                <div className="flex justify-center mb-4">
+                  <AlertCircle className="text-red-600 dark:text-red-400" size={48} />
+                </div>
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Terjadi Kesalahan</h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-                <Button onClick={() => window.location.reload()} className="mx-auto">
-                  Coba Lagi
-                </Button>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={() => loadCourses()} className="inline-flex">
+                    <RefreshCw size={16} />
+                    Coba Lagi
+                  </Button>
+                </div>
               </div>
             </div>
           ) : courses.length === 0 ? (
-            // ✅ Empty State - tidak ada kursus published
+            // Empty State
             <div className="flex justify-center items-center py-20">
               <div className="text-center max-w-md">
                 <div className="text-6xl mb-4">📚</div>
@@ -396,7 +548,7 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
-            // ✅ Display Courses dari Database
+            // Display Courses dari Database
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {courses.map((course) => {
                 const enrollmentStatus = userEnrollments.get(course.id);
@@ -413,10 +565,11 @@ export default function HomePage() {
                     <div className="relative overflow-hidden h-48">
                       <Image
                         width={500}
-                        height={500}
-                        src={course.thumbnail || "https://via.placeholder.com/500x300"}
+                        height={300}
+                        src={course.thumbnail || "https://via.placeholder.com/500x300?text=No+Image"}
                         alt={course.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        priority={false}
                       />
                       <div className="absolute top-4 left-4">
                         <Badge className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-blue-600 dark:text-blue-400">
@@ -444,6 +597,7 @@ export default function HomePage() {
                           isLoading={isEnrolling}
                           disabled={enrollmentStatus === 'enrolled' || isEnrolling}
                           className={`p-2 ${enrollmentStatus === 'enrolled' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                          title={enrollmentStatus === 'enrolled' ? 'Anda sudah terdaftar' : 'Daftar kursus ini'}
                         >
                           {enrollmentStatus === 'enrolled' ? (
                             <CheckCircle size={20} />
@@ -494,7 +648,7 @@ export default function HomePage() {
             <div className="lg:w-1/2 grid grid-cols-2 gap-4">
               <div className="space-y-4 pt-8">
                 <div className="bg-blue-600 rounded-2xl p-1 h-64 overflow-hidden shadow-xl">
-                  <Image width={500} height={500} src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80" className="w-full h-full object-cover rounded-xl" alt="Siswa" />
+                  <Image width={300} height={300} src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80" className="w-full h-full object-cover rounded-xl" alt="Siswa" />
                 </div>
                 <div className="bg-orange-400 dark:bg-orange-500 rounded-2xl h-40 flex items-center justify-center p-6 text-white text-center">
                   <p className="font-bold text-xl leading-tight">100% Online & Fleksibel</p>
@@ -506,7 +660,7 @@ export default function HomePage() {
                   <p className="font-bold">Akses Global</p>
                 </div>
                 <div className="bg-purple-600 dark:bg-purple-500 rounded-2xl p-1 h-64 overflow-hidden shadow-xl">
-                  <Image width={500} height={500} src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=600&q=80" className="w-full h-full object-cover rounded-xl" alt="Pengajar" />
+                  <Image width={300} height={300} src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=600&q=80" className="w-full h-full object-cover rounded-xl" alt="Pengajar" />
                 </div>
               </div>
             </div>
