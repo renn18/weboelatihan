@@ -231,7 +231,7 @@ export default function StudentEnrollmentsClient({
                                 </div>
 
                                 {/* Certificate Info */}
-                                {enrollment.certificate && (
+                                {enrollment.progressPercentage === 100 && enrollment.certificate && (
                                     <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/50 rounded-lg space-y-2">
                                         <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-200">
                                             🎓 Sertifikat Dimiliki

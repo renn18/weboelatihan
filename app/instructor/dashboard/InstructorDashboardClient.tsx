@@ -16,9 +16,9 @@ export default function InstructorDashboardClient({
     const router = useRouter()
 
     return (
-        <div className="space-y-12">
+        <div className="space-y-10">
             {/* Welcome Section */}
-            <div>
+            <div className="text-center mb-12">
                 <h1 className="text-5xl font-black bg-gradient-to-r from-purple-900 to-indigo-900 dark:from-purple-100 dark:to-indigo-100 bg-clip-text text-transparent mb-4">
                     Halo, {userName || 'Instruktur'}! 👋
                 </h1>

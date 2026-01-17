@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import StudentEnrollmentsClient from './StudentEnrollmentsClient'
+import { Button } from '@/components/ui/button'
 
 export default async function StudentEnrollmentsPage() {
     const { userId: clerkUserId } = await auth()
@@ -60,6 +61,11 @@ export default async function StudentEnrollmentsPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-950 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
+                <Link href="/dashboard">
+                    <Button variant="default" className="mb-8">
+                        ← Kembali ke Dashboard
+                    </Button>
+                </Link>
                 <StudentEnrollmentsClient enrollments={enrollmentsWithProgress} />
             </div>
         </div>

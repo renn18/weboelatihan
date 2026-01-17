@@ -39,6 +39,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { InstructorToggle } from "./InstructorToggle"
 
 // Admin Menu Items
 const adminItems = [
@@ -47,12 +48,6 @@ const adminItems = [
         url: "/dashboard",
         icon: BarChart3,
         description: "Overview & Analytics"
-    },
-    {
-        title: "Kelola Kursus",
-        url: "/dashboard/courses",
-        icon: BookOpen,
-        description: "Manage all courses"
     },
     {
         title: "Kelola Pengguna",
@@ -72,7 +67,7 @@ const adminItems = [
 const mentorItems = [
     {
         title: "Dashboard",
-        url: "/mentor",
+        url: "/dashboard",
         icon: Home,
         description: "Your courses"
     },
@@ -129,6 +124,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ userRole = 'user' }: AppSidebarProps) {
+    const isInstructorPage = false;
     const pathname = usePathname()
     const { user } = useUser()
     const { state } = useSidebar()
@@ -236,6 +232,10 @@ export function AppSidebar({ userRole = 'user' }: AppSidebarProps) {
                                 <p className="text-xs text-gray-600 dark:text-gray-400">Progress</p>
                                 <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">68%</p>
                             </div>
+
+                            <InstructorToggle isInstructorPage={isInstructorPage}
+                                instructorPath="/instructor/dashboard"
+                                studentPath="/my-courses" />
                         </div>
                     </SidebarGroup>
                 )}
