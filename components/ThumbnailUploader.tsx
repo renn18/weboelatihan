@@ -59,7 +59,7 @@ export default function ThumbnailUploader({ onUpload, initialUrl }: ThumbnailUpl
                     <Image
                         width={192}
                         height={128}
-                        src={preview}
+                        src={preview || '/placeholder-course.png'}
                         alt="Preview"
                         className="w-48 h-32 object-cover rounded-lg"
                     />
