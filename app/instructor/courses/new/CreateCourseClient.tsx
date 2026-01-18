@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import ThumbnailUploader from '@/components/ThumbnailUploader'
 
 interface CreateCourseClientProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -197,7 +198,7 @@ export default function CreateCourseClient({ course, userId }: CreateCourseClien
                 </div>
 
                 {/* Price */}
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="md:grid-cols-1 space-y-8 ">
                     <div>
                         <label className="block text-lg font-bold text-gray-900 dark:text-white mb-3">
                             💰 Harga (Rp) <span className="text-red-500">*</span>
@@ -223,38 +224,22 @@ export default function CreateCourseClient({ course, userId }: CreateCourseClien
                     {/* Thumbnail URL */}
                     <div>
                         <label className="block text-lg font-bold text-gray-900 dark:text-white mb-3">
-                            🖼️ URL Thumbnail
+                            🖼️ Thumbnail Kursus
                         </label>
-                        <input
-                            type="text"
-                            placeholder="https://example.com/image.jpg"
-                            value={form.thumbnail}
-                            onChange={(e) => setForm({ ...form, thumbnail: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:outline-none transition-colors dark:bg-gray-700 dark:text-white"
+                        <ThumbnailUploader
+                            onUpload={(url: string) => setForm({ ...form, thumbnail: url })}
+                            initialUrl={course?.thumbnail}
                         />
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                            💡 Opsional: URL gambar cover kursus
-                        </p>
+                        {form.thumbnail && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                ✅ Thumbnail siap disimpan: <span className="font-mono text-indigo-600">{form.thumbnail}</span>
+                            </p>
+                        )}
                     </div>
                 </div>
 
                 {/* Thumbnail Preview */}
-                {form.thumbnail && (
-                    <div>
-                        <p className="text-sm font-bold text-gray-900 dark:text-white mb-3">
-                            📸 Preview Thumbnail
-                        </p>
-                        <div className="relative w-full h-48 bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-600">
-                            <Image
-                                width={200}
-                                height={300}
-                                src={form.thumbnail}
-                                alt="Thumbnail preview"
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
-                    </div>
-                )}
+
             </div>
 
             {/* Action Buttons */}
