@@ -383,7 +383,7 @@ export default function HomePage() {
                 Akses ribuan kursus berkualitas tinggi yang diajarkan oleh para profesional industri. Mulai belajar hari ini dan bangun karir impianmu.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Button onClick={() => router.push('/dashboard')} className="text-lg px-8">Mulai Belajar <ArrowRight size={20} /></Button>
+                <Button onClick={() => router.push('/my-courses')} className="text-lg px-8">Mulai Belajar <ArrowRight size={20} /></Button>
                 <Button onClick={() => router.push('/courses')} variant="secondary" className="text-lg px-8">Lihat Kursus <PlayCircle size={20} /></Button>
               </div>
               <div className="mt-8 flex items-center justify-center lg:justify-start gap-4 text-sm text-gray-500 dark:text-gray-400">

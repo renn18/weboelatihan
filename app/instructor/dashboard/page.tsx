@@ -46,9 +46,9 @@ export default async function InstructorDashboardPage() {
 
     return (
         <>
-            <Header />
             <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-950 py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
+                <Header />
+                <div className="max-w-7xl mx-auto pt-20 pb-32">
                     <InstructorDashboardClient courses={courses} userName={dbUser.name} />
                 </div>
             </div>

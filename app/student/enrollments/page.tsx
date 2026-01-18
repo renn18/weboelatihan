@@ -19,6 +19,9 @@ export default async function StudentEnrollmentsPage() {
         where: { clerkId: clerkUserId },
         include: {
             enrollments: {
+                where: {
+                    status: "active"
+                },
                 include: {
                     course: true,
                     certificate: true,
@@ -61,9 +64,9 @@ export default async function StudentEnrollmentsPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-950 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
-                <Link href="/dashboard">
+                <Link href="/">
                     <Button variant="default" className="mb-8">
-                        ← Kembali ke Dashboard
+                        ← Kembali ke HomePage
                     </Button>
                 </Link>
                 <StudentEnrollmentsClient enrollments={enrollmentsWithProgress} />

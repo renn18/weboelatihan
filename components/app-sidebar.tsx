@@ -16,8 +16,8 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { useUser } from "@clerk/nextjs"
+import { usePathname, useRouter } from "next/navigation"
+import { useClerk, useUser } from "@clerk/nextjs"
 import Image from "next/image"
 import {
     Sidebar,
@@ -129,6 +129,15 @@ export function AppSidebar({ userRole = 'user' }: AppSidebarProps) {
     const { user } = useUser()
     const { state } = useSidebar()
 
+    const { signOut } = useClerk();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        await signOut({
+            redirectUrl: '/',
+        });
+    };
+
     // Select menu based on role
     const getMenuItems = () => {
         switch (userRole) {
@@ -137,7 +146,7 @@ export function AppSidebar({ userRole = 'user' }: AppSidebarProps) {
             case 'instructor':
                 return mentorItems
             default:
-                return studentItems
+                return null
         }
     }
 
@@ -178,7 +187,7 @@ export function AppSidebar({ userRole = 'user' }: AppSidebarProps) {
 
                     <SidebarGroupContent>
                         <SidebarMenu className="gap-2">
-                            {menuItems.map((item) => {
+                            {menuItems?.map((item) => {
                                 const Icon = item.icon
                                 const active = isActive(item.url)
 
@@ -298,7 +307,7 @@ export function AppSidebar({ userRole = 'user' }: AppSidebarProps) {
 
                             {/* Menu Items */}
                             <DropdownMenuItem asChild>
-                                <Link href="/settings" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg cursor-pointer transition-colors">
+                                <Link href="dashboard/settings" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg cursor-pointer transition-colors">
                                     <Settings className="w-4 h-4" />
                                     <span>Settings</span>
                                 </Link>
@@ -316,10 +325,7 @@ export function AppSidebar({ userRole = 'user' }: AppSidebarProps) {
                             {/* Logout */}
                             <DropdownMenuItem asChild>
                                 <button
-                                    onClick={() => {
-                                        // Implement logout
-                                        window.location.href = '/sign-out'
-                                    }}
+                                    onClick={handleLogout}
                                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg cursor-pointer transition-colors"
                                 >
                                     <LogOut className="w-4 h-4" />

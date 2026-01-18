@@ -31,9 +31,9 @@ export default async function AdminDashboard() {
         where: { clerkId: clerkUserId },
     })
 
-    // if (!admin || admin.role !== 'admin') {
-    //     return <MethodNotAllowedPage />
-    // }
+    if (!admin || admin.role !== 'admin' && admin.role !== 'instructor') {
+        return <MethodNotAllowedPage />
+    }
 
     // Fetch comprehensive statistics
     const totalUsers = await prisma.user.count()

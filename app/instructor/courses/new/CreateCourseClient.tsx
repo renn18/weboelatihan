@@ -226,7 +226,7 @@ export default function CreateCourseClient({ course, userId }: CreateCourseClien
                             🖼️ URL Thumbnail
                         </label>
                         <input
-                            type="url"
+                            type="text"
                             placeholder="https://example.com/image.jpg"
                             value={form.thumbnail}
                             onChange={(e) => setForm({ ...form, thumbnail: e.target.value })}
